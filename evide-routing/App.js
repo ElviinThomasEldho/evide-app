@@ -338,7 +338,7 @@ const App = () => {
     );
   };
   const sortRoutes = (criteria) => {
-    let sortedRoutes = [...routes.routeDetails]; // Copy the original route details
+    let sortedRoutes = [...routes.routeDetails];
 
     switch (criteria) {
       case "time":
@@ -357,7 +357,6 @@ const App = () => {
         });
         break;
       default:
-        // If no criteria is selected, do nothing
         return;
     }
 
