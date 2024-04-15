@@ -31,6 +31,8 @@ const App = () => {
   const [shortestDistanceBus, setShortestDistanceBus] = useState();
   const [lowestFareBus, setLowestFareBus] = useState();
 
+  const [selectedSortCriteria, setSelectedSortCriteria] = useState(null);
+
   const mapRef = useRef();
   const originRef = useRef();
   const destinationRef = useRef();
@@ -268,10 +270,6 @@ const App = () => {
     return lowestFareBus;
   };
 
-  const handleViewChange = (view) => {
-    setSelectedView(view);
-  };
-
   const shortestTimeOption = () => {
     console.log(shortestTimeBus);
 
@@ -338,6 +336,36 @@ const App = () => {
         ))}
       </View>
     );
+  };
+  const sortRoutes = (criteria) => {
+    let sortedRoutes = [...routes.routeDetails]; // Copy the original route details
+
+    switch (criteria) {
+      case "time":
+        sortedRoutes.sort((a, b) => {
+          return a.legs[0].duration.value - b.legs[0].duration.value;
+        });
+        break;
+      case "distance":
+        sortedRoutes.sort((a, b) => {
+          return a.legs[0].distance.value - b.legs[0].distance.value;
+        });
+        break;
+      case "fare":
+        sortedRoutes.sort((a, b) => {
+          return a.fare.value - b.fare.value;
+        });
+        break;
+      default:
+        // If no criteria is selected, do nothing
+        return;
+    }
+
+    setRoutes((prevState) => ({
+      ...prevState,
+      routeDetails: sortedRoutes,
+    }));
+    setSelectedSortCriteria(criteria);
   };
 
   return (
@@ -424,6 +452,9 @@ const App = () => {
                 </Text>
               </>
             ))}
+          <Text>
+            ----------------------------------------------------------------------------------
+          </Text>
           </View>
           <View style={{ marginBottom: 10 }}>
             <Text>Route Details for Shortest Distance</Text>
@@ -448,6 +479,9 @@ const App = () => {
                 </Text>
               </>
             ))}
+          <Text>
+            ----------------------------------------------------------------------------------
+          </Text>
           </View>
           <View style={{ marginBottom: 10 }}>
             <Text>Route Details for Lowest Fare</Text>
@@ -467,6 +501,9 @@ const App = () => {
               </>
             ))}
           </View>
+          <Text>
+            ----------------------------------------------------------------------------------
+          </Text>
           <Text>Origin to Nearest Metro Station:</Text>
           <Text>Origin: {origin}</Text>
           <Text>Nearest Metro Station: {routes.nearestMetroToOrigin.name}</Text>
@@ -481,6 +518,17 @@ const App = () => {
           <Text>
             -------------------------------------------------------------
           </Text>
+          <View style={styles.sortButtons}>
+            <Button title="Sort by Time" onPress={() => sortRoutes("time")}
+            color={selectedSortCriteria === "time" ? "green" : null} />
+            <Button
+              title="Sort by Distance"
+              onPress={() => sortRoutes("distance")}
+              color={selectedSortCriteria === "distance" ? "green" : null}
+            />
+            <Button title="Sort by Fare" onPress={() => sortRoutes("fare")} 
+            color={selectedSortCriteria === "fare" ? "green" : null}/>
+          </View>
           <Text>Routes:</Text>
           {routes.routeDetails.map((route, index) => (
             <View key={index}>
@@ -535,6 +583,11 @@ const styles = StyleSheet.create({
     borderColor: "gray",
     borderWidth: 1,
     marginBottom: 10,
+  },
+  sortButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginVertical: 10,
   },
 });
 
