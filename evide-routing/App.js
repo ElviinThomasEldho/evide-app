@@ -27,6 +27,9 @@ const App = () => {
 
   const [polylineCoordinates, setPolylineCoordinates] = useState([]);
 
+  const [shortestTimeBus, setShortestTimeBus] = useState();
+  const [shortestDistanceBus, setShortestDistanceBus] = useState();
+  const [lowestFareBus, setLowestFareBus] = useState();
 
   const mapRef = useRef();
   const originRef = useRef();
@@ -180,138 +183,6 @@ const App = () => {
         routeDetails,
       });
 
-      const findBusWithShortestTime = (routeDetails) => {
-        let shortestTime = Infinity;
-        let shortestTimeBus = null;
-
-        for (const route of routeDetails) {
-          const durationValue = route.legs[0].duration.value;
-          if (durationValue < shortestTime) {
-            shortestTime = durationValue;
-            shortestTimeBus = route;
-          }
-        }
-
-        return shortestTimeBus;
-      };
-
-      const findBusWithShortestDistance = (routeDetails) => {
-        let shortestDistance = Infinity;
-        let shortestDistanceBus = null;
-
-        for (const route of routeDetails) {
-          const distanceValue = route.legs[0].distance.value;
-          if (distanceValue < shortestDistance) {
-            shortestDistance = distanceValue;
-            shortestDistanceBus = route;
-          }
-        }
-
-        return shortestDistanceBus;
-      };
-
-      const findBusWithLowestFare = (routeDetails) => {
-        let lowestFare = Infinity;
-        let lowestFareBus = null;
-
-        for (const route of routeDetails) {
-          const fareValue = route.fare.value;
-          if (fareValue < lowestFare) {
-            lowestFare = fareValue;
-            lowestFareBus = route;
-          }
-        }
-
-        return lowestFareBus;
-      };
-
-      const shortestTimeBus = findBusWithShortestTime(routeDetails);
-      const shortestDistanceBus = findBusWithShortestDistance(routeDetails);
-      const lowestFareBus = findBusWithLowestFare(routeDetails);
-
-      console.log("Shortest Time Bus:", shortestTimeBus.legs[0].duration.text);
-      console.log(
-        "Shortest Distance Bus:",
-        shortestDistanceBus.legs[0].distance.text
-      );
-      console.log("Lowest Fare Bus:", lowestFareBus.fare.value);
-
-      const handleViewChange = (view) => {
-        setSelectedView(view);
-      };
-
-      const shortestTimeOption = () => {
-        return (
-          <View>
-            <Text>Route Details for Shortest Time</Text>
-            <Text>Start Address: {shortestTimeBus.legs[0].start_address}</Text>
-            <Text>End Address: {shortestTimeBus.legs[0].end_address}</Text>
-            <Text>Total Distance: {shortestTimeBus.legs[0].distance.text}</Text>
-            <Text>Total Time: {shortestTimeBus.legs[0].duration.text}</Text>
-            <Text>Total Cost: {shortestTimeBus.fare.text}</Text>
-            {route.legs[0].steps.map((step, index) => (
-              <>
-                <Text>
-                  {index}.{" "}
-                  {step.html_instructions && `${step.html_instructions}`}
-                  {step.transit_details &&
-                    ` - No. of Stops: ${step.transit_details.num_stops}`}
-                </Text>
-              </>
-            ))}
-          </View>
-        );
-      };
-
-      const shortestDistanceOption = () => {
-        return (
-          <View>
-            <Text>Route Details for Shortest Distance</Text>
-            <Text>
-              Start Address: {shortestDistanceBus.legs[0].start_address}
-            </Text>
-            <Text>End Address: {shortestDistanceBus.legs[0].end_address}</Text>
-            <Text>
-              Total Distance: {shortestDistanceBus.legs[0].distance.text}
-            </Text>
-            <Text>Total Time: {shortestDistanceBus.legs[0].duration.text}</Text>
-            <Text>Total Cost: {shortestDistanceBus.fare.text}</Text>
-            {route.legs[0].steps.map((step, index) => (
-              <>
-                <Text>
-                  {index}.{" "}
-                  {step.html_instructions && `${step.html_instructions}`}
-                  {step.transit_details &&
-                    ` - No. of Stops: ${step.transit_details.num_stops}`}
-                </Text>
-              </>
-            ))}
-          </View>
-        );
-      };
-      const lowestFareOption = () => {
-        return (
-          <View>
-            <Text>Route Details for Lowest Fare</Text>
-            <Text>Start Address: {lowestFareBus.legs[0].start_address}</Text>
-            <Text>End Address: {lowestFareBus.legs[0].end_address}</Text>
-            <Text>Total Distance: {lowestFareBus.legs[0].distance.text}</Text>
-            <Text>Total Time: {lowestFareBus.legs[0].duration.text}</Text>
-            <Text>Total Cost: {lowestFareBus.fare.text}</Text>
-            {route.legs[0].steps.map((step, index) => (
-              <>
-                <Text>
-                  {index}.{" "}
-                  {step.html_instructions && `${step.html_instructions}`}
-                  {step.transit_details &&
-                    ` - No. of Stops: ${step.transit_details.num_stops}`}
-                </Text>
-              </>
-            ))}
-          </View>
-        );
-      };
-
       setPolylineCoordinates(
         polyline
           .decode(response.data.routes[0].overview_polyline.points)
@@ -319,23 +190,7 @@ const App = () => {
             return { latitude: coord[0], longitude: coord[1] };
           })
       );
-      // console.log(polylineCoordinates);
-      // mapRef.current?.animateToRegion({
-      //   latitude: response.data.routes[0].legs[0].start_location.lat,
-      //   longitude: response.data.routes[0].legs[0].start_location.lng,
-      //   latitudeDelta: 0.005,
-      //   longitudeDelta: 0.005,
-      // });
-      // mapRef.current?.setMapBoundaries(
-      //   northEast = {
-      //     latitude: response.data.routes[0].bounds.northeast.lat,
-      //     longitude: response.data.routes[0].bounds.northeast.lng,
-      //   },
-      //   southWest = {
-      //     latitude: response.data.routes[0].bounds.southwest.lat,
-      //     longitude: response.data.routes[0].bounds.southwest.lng,
-      //   }
-      // );
+
       setMarkers(() => [
         {
           latitude: response.data.routes[0].legs[0].start_location.lat,
@@ -348,9 +203,141 @@ const App = () => {
       ]);
       mapRef.current?.fitToElements();
       console.log("Markers : ", markers);
+
+      // shortestTimeBus = findBusWithShortestTime(routeDetails);
+      // shortestDistanceBus = findBusWithShortestDistance(routeDetails);
+      // lowestFareBus = findBusWithLowestFare(routeDetails);
+
+      setShortestDistanceBus(() => findBusWithShortestDistance(routeDetails));
+      setShortestTimeBus(() => findBusWithShortestTime(routeDetails));
+      setLowestFareBus(() => findBusWithLowestFare(routeDetails));
+
+      console.log("Shortest Time Bus:", shortestTimeBus.legs[0].duration.text);
+      console.log(
+        "Shortest Distance Bus:",
+        shortestDistanceBus.legs[0].distance.text
+      );
+      console.log("Lowest Fare Bus:", lowestFareBus.fare.value);
     } catch (error) {
       console.error("Error fetching coordinates: ", error);
     }
+  };
+
+  const findBusWithShortestTime = (routeDetails) => {
+    let shortestTime = Infinity;
+    let shortestTimeBus = null;
+
+    for (const route of routeDetails) {
+      const durationValue = route.legs[0].duration.value;
+      if (durationValue < shortestTime) {
+        shortestTime = durationValue;
+        shortestTimeBus = route;
+      }
+    }
+
+    return shortestTimeBus;
+  };
+
+  const findBusWithShortestDistance = (routeDetails) => {
+    let shortestDistance = Infinity;
+    let shortestDistanceBus = null;
+
+    for (const route of routeDetails) {
+      const distanceValue = route.legs[0].distance.value;
+      if (distanceValue < shortestDistance) {
+        shortestDistance = distanceValue;
+        shortestDistanceBus = route;
+      }
+    }
+
+    return shortestDistanceBus;
+  };
+
+  const findBusWithLowestFare = (routeDetails) => {
+    let lowestFare = Infinity;
+    let lowestFareBus = null;
+
+    for (const route of routeDetails) {
+      const fareValue = route.fare.value;
+      if (fareValue < lowestFare) {
+        lowestFare = fareValue;
+        lowestFareBus = route;
+      }
+    }
+
+    return lowestFareBus;
+  };
+
+  const handleViewChange = (view) => {
+    setSelectedView(view);
+  };
+
+  const shortestTimeOption = () => {
+    console.log(shortestTimeBus);
+
+    return (
+      <View>
+        <Text>Route Details for Shortest Time</Text>
+        <Text>Start Address: {shortestTimeBus.legs[0].start_address}</Text>
+        <Text>End Address: {shortestTimeBus.legs[0].end_address}</Text>
+        <Text>Total Distance: {shortestTimeBus.legs[0].distance.text}</Text>
+        <Text>Total Time: {shortestTimeBus.legs[0].duration.text}</Text>
+        <Text>Total Cost: {shortestTimeBus.fare.text}</Text>
+        {shortestTimeBus.legs[0].steps.map((step, index) => (
+          <>
+            <Text>
+              {index}. {step.html_instructions && `${step.html_instructions}`}
+              {step.transit_details &&
+                ` - No. of Stops: ${step.transit_details.num_stops}`}
+            </Text>
+          </>
+        ))}
+      </View>
+    );
+  };
+
+  const shortestDistanceOption = () => {
+    return (
+      <View>
+        <Text>Route Details for Shortest Distance</Text>
+        <Text>Start Address: {shortestDistanceBus.legs[0].start_address}</Text>
+        <Text>End Address: {shortestDistanceBus.legs[0].end_address}</Text>
+        <Text>Total Distance: {shortestDistanceBus.legs[0].distance.text}</Text>
+        <Text>Total Time: {shortestDistanceBus.legs[0].duration.text}</Text>
+        <Text>Total Cost: {shortestDistanceBus.fare.text}</Text>
+        {shortestDistanceBus.legs[0].steps.map((step, index) => (
+          <>
+            <Text>
+              {index}. {step.html_instructions && `${step.html_instructions}`}
+              {step.transit_details &&
+                ` - No. of Stops: ${step.transit_details.num_stops}`}
+            </Text>
+          </>
+        ))}
+      </View>
+    );
+  };
+
+  const lowestFareOption = () => {
+    return (
+      <View>
+        <Text>Route Details for Lowest Fare</Text>
+        <Text>Start Address: {lowestFareBus.legs[0].start_address}</Text>
+        <Text>End Address: {lowestFareBus.legs[0].end_address}</Text>
+        <Text>Total Distance: {lowestFareBus.legs[0].distance.text}</Text>
+        <Text>Total Time: {lowestFareBus.legs[0].duration.text}</Text>
+        <Text>Total Cost: {lowestFareBus.fare.text}</Text>
+        {lowestFareBus.legs[0].steps.map((step, index) => (
+          <>
+            <Text>
+              {index}. {step.html_instructions && `${step.html_instructions}`}
+              {step.transit_details &&
+                ` - No. of Stops: ${step.transit_details.num_stops}`}
+            </Text>
+          </>
+        ))}
+      </View>
+    );
   };
 
   return (
@@ -418,6 +405,68 @@ const App = () => {
 
       {routes && (
         <ScrollView>
+          <View style={{ marginBottom: 10 }}>
+            <Text>Route Details for Shortest Time</Text>
+            <Text>Start Address: {shortestTimeBus?.legs[0].start_address}</Text>
+            <Text>End Address: {shortestTimeBus?.legs[0].end_address}</Text>
+            <Text>
+              Total Distance: {shortestTimeBus?.legs[0].distance.text}
+            </Text>
+            <Text>Total Time: {shortestTimeBus?.legs[0].duration.text}</Text>
+            <Text>Total Cost: {shortestTimeBus?.fare.text}</Text>
+            {shortestTimeBus?.legs[0].steps.map((step, index) => (
+              <>
+                <Text>
+                  {index}.{" "}
+                  {step.html_instructions && `${step.html_instructions}`}
+                  {step.transit_details &&
+                    ` - No. of Stops: ${step.transit_details.num_stops}`}
+                </Text>
+              </>
+            ))}
+          </View>
+          <View style={{ marginBottom: 10 }}>
+            <Text>Route Details for Shortest Distance</Text>
+            <Text>
+              Start Address: {shortestDistanceBus?.legs[0].start_address}
+            </Text>
+            <Text>End Address: {shortestDistanceBus?.legs[0].end_address}</Text>
+            <Text>
+              Total Distance: {shortestDistanceBus?.legs[0].distance.text}
+            </Text>
+            <Text>
+              Total Time: {shortestDistanceBus?.legs[0].duration.text}
+            </Text>
+            <Text>Total Cost: {shortestDistanceBus?.fare.text}</Text>
+            {shortestDistanceBus?.legs[0].steps.map((step, index) => (
+              <>
+                <Text>
+                  {index}.{" "}
+                  {step.html_instructions && `${step.html_instructions}`}
+                  {step.transit_details &&
+                    ` - No. of Stops: ${step.transit_details.num_stops}`}
+                </Text>
+              </>
+            ))}
+          </View>
+          <View style={{ marginBottom: 10 }}>
+            <Text>Route Details for Lowest Fare</Text>
+            <Text>Start Address: {lowestFareBus?.legs[0].start_address}</Text>
+            <Text>End Address: {lowestFareBus?.legs[0].end_address}</Text>
+            <Text>Total Distance: {lowestFareBus?.legs[0].distance.text}</Text>
+            <Text>Total Time: {lowestFareBus?.legs[0].duration.text}</Text>
+            <Text>Total Cost: {lowestFareBus?.fare.text}</Text>
+            {lowestFareBus?.legs[0].steps.map((step, index) => (
+              <>
+                <Text>
+                  {index}.{" "}
+                  {step.html_instructions && `${step.html_instructions}`}
+                  {step.transit_details &&
+                    ` - No. of Stops: ${step.transit_details.num_stops}`}
+                </Text>
+              </>
+            ))}
+          </View>
           <Text>Origin to Nearest Metro Station:</Text>
           <Text>Origin: {origin}</Text>
           <Text>Nearest Metro Station: {routes.nearestMetroToOrigin.name}</Text>
@@ -454,31 +503,10 @@ const App = () => {
               <Text>
                 -------------------------------------------------------------
               </Text>
-              
             </View>
           ))}
-
         </ScrollView>
       )}
-      <View style={{ marginBottom: 10 }}>
-                <Button
-                  title="Shortest Time"
-                  onPress={() => shortestTimeOption()}
-                />
-              </View>
-
-              <View style={{ marginBottom: 10 }}>
-                <Button
-                  title="Shortest Distance"
-                  onPress={() => shortestDistanceOption()}
-                />
-              </View>
-              <View style={{ marginBottom: 10 }}>
-                <Button
-                  title="Lowest Fare"
-                  onPress={() => lowestFareOption()}
-                />
-              </View>
     </View>
   );
 };
