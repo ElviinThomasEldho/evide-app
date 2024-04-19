@@ -176,66 +176,21 @@ const App = () => {
         "Polyline : ",
         response.data.routes[0].overview_polyline.points
       );
+
       const originToMetroResponse = await axios.get(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${nearestMetroToOrigin.lat},${nearestMetroToOrigin.lng}&key=${API_KEY}&mode=transit&alternatives=true`
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${routes.nearestMetroToOrigin.lat},${routes.nearestMetroToOrigin.lng}&key=${API_KEY}&mode=transit&alternatives=true`
       );
       const metroToDestinationResponse = await axios.get(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${nearestMetroToDestination.lat},${nearestMetroToDestination.lng}&destination=${destination}&key=${API_KEY}&mode=transit&alternatives=true`
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${routes.nearestMetroToDestination.lat},${routes.nearestMetroToDestination.lng}&destination=${destination}&key=${API_KEY}&mode=transit&alternatives=true`
       );
 
       const routeDetails = response.data.routes;
-      const otmDetails=originToMetroResponse.data.routes;
+      const originToMetroResponseRoutes=originToMetroResponse.data;
+      const metroToDestinationResponseRoutes=metroToDestinationResponse.data;
       console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOOOOOOOOOOOOOOOOOAAAAAAAAOOOOOOO");
       console.log(originToMetroResponse.data.routes);
-      console.log(metroToDestinationResponse.data.routes[0].legs);
+      console.log(metroToDestinationResponse.data.routes);
 
-
-      const createCombinedRoutes = (originToMetroResponseData, metroToDestinationResponseData) => {
-        const combinedRoutes = [];
-      
-        originToMetroResponseData.forEach(originRoute => {
-          metroToDestinationResponseData.forEach(destinationRoute => {
-            const combinedRoute = {
-              originToMetroLeg: originRoute,
-              metroLeg: {
-                fare: {
-                  currency: "INR",
-                  text: "₹30.00", 
-                  value: 30 
-                },
-                legs: [], 
-                duration: { 
-                  text: "30 mins",
-                  value: 1800
-                },
-               
-                summary: "Metro Transport",
-                warnings: ["Metro transport - Use caution"],
-                waypoint_order: []
-              },
-              metroToDestinationLeg: destinationRoute
-            };
-      
-          
-            combinedRoutes.push(combinedRoute);
-          });
-        });
-      
-        return combinedRoutes;
-      };
-      
-      
-      const combinedRoutes = createCombinedRoutes(originToMetroResponse.data.routes, metroToDestinationResponse.data.routes);
-      console.log(combinedRoutes);
-      console.log("1st part");
-      console.log(combinedRoutes[0].originToMetroLeg);
-      console.log("2nd part");
-      console.log(combinedRoutes[0].metroLeg);
-      console.log("3rd part");
-      console.log(combinedRoutes[0].metroToDestinationLeg);
-
-
-    
 
       setRoutes({
         nearestMetroToOrigin,
@@ -327,8 +282,6 @@ const App = () => {
 
     return lowestFareBus;
   };
-
-
 
   const shortestTimeOption = () => {
     console.log(shortestTimeBus);
@@ -426,8 +379,6 @@ const App = () => {
     }));
     setSelectedSortCriteria(criteria);
   };
-
-
 
   return (
     <View style={styles.container}>
