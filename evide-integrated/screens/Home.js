@@ -1,21 +1,28 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  TextInput,
-  Button,
-  Text,
-  StyleSheet,
-  TextInputComponent,
-  ScrollView,
-} from "react-native";
-import MapView, { Polyline, PROVIDER_GOOGLE, Marker } from "react-native-maps";
-import axios from "axios";
-import * as Location from "expo-location";
+import { StyleSheet, View, Button } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import polyline from "@mapbox/polyline";
 
+import "react-native-gesture-handler";
+import {
+  GestureHandlerRootView,
+  ScrollView,
+} from "react-native-gesture-handler";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
+import BottomModalContainer from "../components/BottomModalContainer";
+import ExploreModal from "../components/ExploreModal";
+import RoutesModal from "../components/RoutesModal";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import * as Location from "expo-location";
 
-const App = () => {
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+
+import axios from "axios";
+
+const Home = ({ navigation }) => {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [directions, setDirections] = useState();
@@ -167,15 +174,17 @@ const App = () => {
         destinationCoordinates
       );
 
+      console.log(originCoordinates, destinationCoordinates)
+
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
       );
       setDirections(response.data);
       console.log("Routes : ", response.data.routes);
-      console.log(
-        "Polyline : ",
-        response.data.routes[0].overview_polyline.points
-      );
+      // console.log(
+      //   "Polyline : ",
+      //   response.data.routes[0].overview_polyline.points
+      // );
       const originToMetroResponse = await axios.get(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${nearestMetroToOrigin.lat},${nearestMetroToOrigin.lng}&key=${API_KEY}&mode=transit&alternatives=true`
       );
@@ -184,48 +193,53 @@ const App = () => {
       );
 
       const routeDetails = response.data.routes;
-      const otmDetails=originToMetroResponse.data.routes;
-      console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOOOOOOOOOOOOOOOOOAAAAAAAAOOOOOOO");
+      const otmDetails = originToMetroResponse.data.routes;
+      console.log(
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOOOOOOOOOOOOOOOOOAAAAAAAAOOOOOOO"
+      );
       console.log(originToMetroResponse.data.routes);
-      console.log(metroToDestinationResponse.data.routes[0].legs);
+      console.log(metroToDestinationResponse.data.routes[0]?.legs);
 
-
-      const createCombinedRoutes = (originToMetroResponseData, metroToDestinationResponseData) => {
+      const createCombinedRoutes = (
+        originToMetroResponseData,
+        metroToDestinationResponseData
+      ) => {
         const combinedRoutes = [];
-      
-        originToMetroResponseData.forEach(originRoute => {
-          metroToDestinationResponseData.forEach(destinationRoute => {
+
+        originToMetroResponseData.forEach((originRoute) => {
+          metroToDestinationResponseData.forEach((destinationRoute) => {
             const combinedRoute = {
               originToMetroLeg: originRoute,
               metroLeg: {
                 fare: {
                   currency: "INR",
-                  text: "₹30.00", 
-                  value: 30 
+                  text: "₹30.00",
+                  value: 30,
                 },
-                legs: [], 
-                duration: { 
+                legs: [],
+                duration: {
                   text: "30 mins",
-                  value: 1800
+                  value: 1800,
                 },
-               
+
                 summary: "Metro Transport",
                 warnings: ["Metro transport - Use caution"],
-                waypoint_order: []
+                waypoint_order: [],
               },
-              metroToDestinationLeg: destinationRoute
+              metroToDestinationLeg: destinationRoute,
             };
-      
-          
+
             combinedRoutes.push(combinedRoute);
           });
         });
-      
+
         return combinedRoutes;
       };
-      
-      
-      const combinedRoutes = createCombinedRoutes(originToMetroResponse.data.routes, metroToDestinationResponse.data.routes);
+
+      const combinedRoutes = createCombinedRoutes(
+        originToMetroResponse.data.routes,
+        metroToDestinationResponse.data.routes
+      );
       console.log(combinedRoutes);
       console.log("1st part");
       console.log(combinedRoutes[0].originToMetroLeg);
@@ -233,9 +247,6 @@ const App = () => {
       console.log(combinedRoutes[0].metroLeg);
       console.log("3rd part");
       console.log(combinedRoutes[0].metroToDestinationLeg);
-
-
-    
 
       setRoutes({
         nearestMetroToOrigin,
@@ -328,7 +339,6 @@ const App = () => {
     return lowestFareBus;
   };
 
-
   const sortRoutes = (criteria) => {
     let sortedRoutes = [...routes.routeDetails];
 
@@ -359,229 +369,175 @@ const App = () => {
     setSelectedSortCriteria(criteria);
   };
 
-
-
   return (
-    <View style={styles.container}>
-      <Text>Evide</Text>
-      <GooglePlacesAutocomplete
-        placeholder="Enter Origin"
-        ref={originRef}
-        styles={{ textInput: styles.originInput }}
-        onPress={(data, details = null) => {
-          setOrigin(data.description);
-        }}
-        query={{
-          key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
-          language: "en",
-        }}
-      />
-      <GooglePlacesAutocomplete
-        ref={destinationRef}
-        styles={{ textInput: styles.destinationInput }}
-        placeholder="Enter Destination"
-        onPress={(data, details = null) => {
-          setDestination(data.description);
-        }}
-        query={{
-          key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
-          language: "en",
-        }}
-      />
-      <Button title="Convert" onPress={getroutes} />
-
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        provider={PROVIDER_GOOGLE}
-        showsUserLocation
-        showsMyLocationButton
-      >
-        {markers.map((marker, index) => (
-          <Marker key={index} coordinate={marker} />
-        ))}
-        {routes &&
-          routes.routeDetails.map((route) => {
-            const coords = polyline
-              .decode(route.overview_polyline.points)
-              .map((coord) => {
-                return { latitude: coord[0], longitude: coord[1] };
-              });
-
-            var x = Math.round(0xffffff * Math.random()).toString(16);
-            var y = 6 - x.length;
-            var z = "000000";
-            var z1 = z.substring(0, y);
-            var color = "#" + z1 + x;
-
-            return (
-              <Polyline
-                coordinates={coords}
-                strokeColor={color} // fallback for when `strokeColors` is not supported by the map-provider
-                strokeWidth={7}
-              />
-            );
-          })}
-      </MapView>
-
-      {routes && (
-        <ScrollView>
-          <View style={{ marginBottom: 10 }}>
-            <Text>Route Details for Shortest Time</Text>
-            <Text>Start Address: {shortestTimeBus?.legs[0].start_address}</Text>
-            <Text>End Address: {shortestTimeBus?.legs[0].end_address}</Text>
-            <Text>
-              Total Distance: {shortestTimeBus?.legs[0].distance.text}
-            </Text>
-            <Text>Total Time: {shortestTimeBus?.legs[0].duration.text}</Text>
-            <Text>Total Cost: {shortestTimeBus?.fare.text}</Text>
-            {shortestTimeBus?.legs[0].steps.map((step, index) => (
-              <>
-                <Text>
-                  {index}.{" "}
-                  {step.html_instructions && `${step.html_instructions}`}
-                  {step.transit_details &&
-                    ` - No. of Stops: ${step.transit_details.num_stops}`}
-                </Text>
-              </>
-            ))}
-          <Text>
-            ----------------------------------------------------------------------------------
-          </Text>
-          </View>
-          <View style={{ marginBottom: 10 }}>
-            <Text>Route Details for Shortest Distance</Text>
-            <Text>
-              Start Address: {shortestDistanceBus?.legs[0].start_address}
-            </Text>
-            <Text>End Address: {shortestDistanceBus?.legs[0].end_address}</Text>
-            <Text>
-              Total Distance: {shortestDistanceBus?.legs[0].distance.text}
-            </Text>
-            <Text>
-              Total Time: {shortestDistanceBus?.legs[0].duration.text}
-            </Text>
-            <Text>Total Cost: {shortestDistanceBus?.fare.text}</Text>
-            {shortestDistanceBus?.legs[0].steps.map((step, index) => (
-              <>
-                <Text>
-                  {index}.{" "}
-                  {step.html_instructions && `${step.html_instructions}`}
-                  {step.transit_details &&
-                    ` - No. of Stops: ${step.transit_details.num_stops}`}
-                </Text>
-              </>
-            ))}
-          <Text>
-            ----------------------------------------------------------------------------------
-          </Text>
-          </View>
-          <View style={{ marginBottom: 10 }}>
-            <Text>Route Details for Lowest Fare</Text>
-            <Text>Start Address: {lowestFareBus?.legs[0].start_address}</Text>
-            <Text>End Address: {lowestFareBus?.legs[0].end_address}</Text>
-            <Text>Total Distance: {lowestFareBus?.legs[0].distance.text}</Text>
-            <Text>Total Time: {lowestFareBus?.legs[0].duration.text}</Text>
-            <Text>Total Cost: {lowestFareBus?.fare.text}</Text>
-            {lowestFareBus?.legs[0].steps.map((step, index) => (
-              <>
-                <Text>
-                  {index}.{" "}
-                  {step.html_instructions && `${step.html_instructions}`}
-                  {step.transit_details &&
-                    ` - No. of Stops: ${step.transit_details.num_stops}`}
-                </Text>
-              </>
-            ))}
-          </View>
-          <Text>
-            ----------------------------------------------------------------------------------
-          </Text>
-          <Text>Origin to Nearest Metro Station:</Text>
-          <Text>Origin: {origin}</Text>
-          <Text>Nearest Metro Station: {routes.nearestMetroToOrigin.name}</Text>
-          <Text>
-            -------------------------------------------------------------
-          </Text>
-          <Text>Nearest Metro Station to Destination:</Text>
-          <Text>
-            Nearest Metro Station: {routes.nearestMetroToDestination.name}
-          </Text>
-          <Text>Destination: {destination}</Text>
-          <Text>
-            -------------------------------------------------------------
-          </Text>
-          <View style={styles.sortButtons}>
-            <Button title="Sort by Time" onPress={() => sortRoutes("time")}
-            color={selectedSortCriteria === "time" ? "green" : null} />
-            <Button
-              title="Sort by Distance"
-              onPress={() => sortRoutes("distance")}
-              color={selectedSortCriteria === "distance" ? "green" : null}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <View style={styles.container}>
+          <View style={styles.inputContainer}>
+            {/* <View style={styles.menuButtonContainer}>
+              <MaterialIcons name="menu" size={20} color="#000"/>
+            </View> */}
+            <GooglePlacesAutocomplete
+              placeholder="Enter Origin"
+              ref={originRef}
+              styles={{ textInput: styles.locationInput }}
+              onPress={(data, details = null) => {
+                setOrigin(data.description);
+              }}
+              query={{
+                key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
+                language: "en",
+              }}
             />
-            <Button title="Sort by Fare" onPress={() => sortRoutes("fare")} 
-            color={selectedSortCriteria === "fare" ? "green" : null}/>
+            <GooglePlacesAutocomplete
+              ref={destinationRef}
+              styles={{
+                textInput: styles.locationInput,
+                listView: { position: "absolute", top: 50, zIndex: 2 },
+              }}
+              placeholder="Enter Destination"
+              onPress={(data, details = null) => {
+                console.log("Destination : ", data, details);
+                setDestination(data.description);
+              }}
+              query={{
+                key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
+                language: "en",
+              }}
+            />
+            <Button title="Convert" onPress={getroutes} />
           </View>
-          <Text>Routes:</Text>
-          {routes.routeDetails.map((route, index) => (
-            <View key={index}>
-              <Text>Route Details {index + 1}:</Text>
-              <Text>Start Address: {route?.legs[0].start_address}</Text>
-              <Text>End Address: {route?.legs[0].end_address}</Text>
-              <Text>Total Distance: {route?.legs[0].distance.text}</Text>
-              <Text>Total Time: {route?.legs[0].duration.text}</Text>
-              <Text>Total Cost: {route?.fare.text}</Text>
-              {route.legs[0].steps.map((step, index) => (
-                <>
-                  <Text>
-                    {index}.{" "}
-                    {step.html_instructions && `${step.html_instructions}`}
-                    {step.transit_details &&
-                      ` - No. of Stops: ${step.transit_details.num_stops}`}
-                  </Text>
-                </>
-              ))}
-              <Text>
-                -------------------------------------------------------------
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-      )}
-    </View>
+
+          <MapView
+            style={styles.map}
+            provider={PROVIDER_GOOGLE}
+            ref={mapRef}
+            showsUserLocation
+            showsMyLocationButton
+          >
+            {markers.map((marker, index) => (
+              <Marker key={index} coordinate={marker} />
+            ))}
+            {routes &&
+              routes.routeDetails.map((route) => {
+                const coords = polyline
+                  .decode(route.overview_polyline.points)
+                  .map((coord) => {
+                    return { latitude: coord[0], longitude: coord[1] };
+                  });
+
+                var x = Math.round(0xffffff * Math.random()).toString(16);
+                var y = 6 - x.length;
+                var z = "000000";
+                var z1 = z.substring(0, y);
+                var color = "#" + z1 + x;
+
+                return (
+                  <Polyline
+                    coordinates={coords}
+                    strokeColor={color} // fallback for when `strokeColors` is not supported by the map-provider
+                    strokeWidth={7}
+                  />
+                );
+              })}
+          </MapView>
+          <BottomModalContainer>
+            {/* <ExploreModal navigation={navigation} /> */}
+            <RoutesModal selectedSortCriteria={selectedSortCriteria} sortRoutes={sortRoutes} origin={origin} destination={destination} routes={routes} shortestTimeBus={shortestTimeBus} shortestDistanceBus={shortestDistanceBus}  lowestFareBus={lowestFareBus} navigation={navigation} />
+          </BottomModalContainer>
+        </View>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 };
+
+const CONTAINER_PADDING = 10;
+const BUTTON_WIDTH = "80%";
+const INPUT_WIDTH = 500;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    padding: 20,
+    width: "100vw",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: CONTAINER_PADDING,
   },
-  map: {
+  inputContainer: {
+    minHeight: 170,
     width: "100%",
-    height: "50%",
+    justifyContent: "space-around",
+    alignContent: "center",
+    padding: CONTAINER_PADDING,
     marginTop: 20,
   },
-  originInput: {
-    height: 40,
-    width: 200,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 10,
+  map: {
+    flex: 1,
+    ...StyleSheet.absoluteFillObject,
+    // width: "100%",
+    height: "100vh",
+    marginBottom: 0,
+    zIndex: -1,
   },
-  destinationInput: {
-    height: 40,
-    width: 200,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 10,
+  goButtonContainer: {
+    position: "absolute",
+    bottom: CONTAINER_PADDING,
+    alignSelf: "center",
+    elevation: 1,
   },
-  sortButtons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: 10,
+  goButton: {
+    backgroundColor: "#FFC75B",
+    borderRadius: 20,
+    paddingHorizontal: "20%",
+    paddingVertical: "5%",
+    alignItems: "center",
+    width: BUTTON_WIDTH,
+  },
+  goButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  locationInput: {
+    color: "black",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 25,
+    width: "100%",
+    padding: CONTAINER_PADDING,
+    marginBottom: CONTAINER_PADDING,
+    borderWidth: 1,
+    borderColor: "#2675EC",
+    fontWeight: "600",
+  },
+  textInput: {
+    color: "black",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 25,
+    width: INPUT_WIDTH,
+    padding: CONTAINER_PADDING,
+    marginBottom: CONTAINER_PADDING,
+    borderWidth: 1,
+    borderColor: "#2675EC",
+    fontWeight: "600",
+  },
+  firstTextInput: {
+    marginTop: CONTAINER_PADDING,
+  },
+  menuButtonContainer: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    padding: CONTAINER_PADDING,
+  },
+  menuButton: {
+    width: "200%",
+    height: "100%",
+    alignItems: "center",
+    borderRadius: 25,
+    backgroundColor: "black",
+  },
+  buttonText: {
+    fontSize: 24,
+    color: "#FFFFFF",
   },
 });
-
-export default App;
+export default Home;

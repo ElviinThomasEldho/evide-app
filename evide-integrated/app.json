@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "evide-integration",
-    "slug": "evide-integration",
+    "name": "evide-integrated",
+    "slug": "evide-integrated",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
