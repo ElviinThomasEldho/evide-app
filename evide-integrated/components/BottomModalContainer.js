@@ -53,7 +53,18 @@ export default BottomModalContainer = ({ navigation, children }) => {
           snapPoints={snapPoints}
           enableContentPanning={handleContentPanning} // Apply the custom content panning handler
         >
-          {children}
+          <View
+            style={{ height: "100%", marginTop: "1%", position: "relative" }}
+          >
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              scrollEventThrottle={16}
+              style={{}}
+              contentContainerStyle={{ justifyContent: "flex-start" }}
+            >
+              {children}
+            </ScrollView>
+          </View>
         </BottomSheetModal>
       </View>
     </View>
@@ -66,7 +77,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   modalButtonContainer: {
-    top: '60vh', // Adjust the margin bottom to position the button lower
+    top: "60vh", // Adjust the margin bottom to position the button lower
     backgroundColor: "white",
     borderRadius: 30,
     borderColor: "black",

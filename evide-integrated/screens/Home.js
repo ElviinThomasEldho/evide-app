@@ -264,12 +264,12 @@ const Home = ({ navigation }) => {
 
       setMarkers(() => [
         {
-          latitude: response.data.routes[0].legs[0].start_location.lat,
-          longitude: response.data.routes[0].legs[0].start_location.lng,
+          latitude: response.data.routes[0]?.legs[0].start_location.lat,
+          longitude: response.data.routes[0]?.legs[0].start_location.lng,
         },
         {
-          latitude: response.data.routes[0].legs[0].end_location.lat,
-          longitude: response.data.routes[0].legs[0].end_location.lng,
+          latitude: response.data.routes[0]?.legs[0].end_location.lat,
+          longitude: response.data.routes[0]?.legs[0].end_location.lng,
         },
       ]);
       mapRef.current?.fitToElements();
@@ -283,12 +283,12 @@ const Home = ({ navigation }) => {
       setShortestTimeBus(() => findBusWithShortestTime(routeDetails));
       setLowestFareBus(() => findBusWithLowestFare(routeDetails));
 
-      console.log("Shortest Time Bus:", shortestTimeBus.legs[0].duration.text);
+      console.log("Shortest Time Bus:", shortestTimeBus?.legs[0].duration.text);
       console.log(
         "Shortest Distance Bus:",
-        shortestDistanceBus.legs[0].distance.text
+        shortestDistanceBus?.legs[0].distance.text
       );
-      console.log("Lowest Fare Bus:", lowestFareBus.fare.value);
+      console.log("Lowest Fare Bus:", lowestFareBus.fare?.value);
     } catch (error) {
       console.error("Error fetching coordinates: ", error);
     }
@@ -299,7 +299,7 @@ const Home = ({ navigation }) => {
     let shortestTimeBus = null;
 
     for (const route of routeDetails) {
-      const durationValue = route.legs[0].duration.value;
+      const durationValue = route?.legs[0].duration?.value;
       if (durationValue < shortestTime) {
         shortestTime = durationValue;
         shortestTimeBus = route;
@@ -314,7 +314,7 @@ const Home = ({ navigation }) => {
     let shortestDistanceBus = null;
 
     for (const route of routeDetails) {
-      const distanceValue = route.legs[0].distance.value;
+      const distanceValue = route?.legs[0].distance?.value;
       if (distanceValue < shortestDistance) {
         shortestDistance = distanceValue;
         shortestDistanceBus = route;
@@ -329,7 +329,7 @@ const Home = ({ navigation }) => {
     let lowestFareBus = null;
 
     for (const route of routeDetails) {
-      const fareValue = route.fare.value;
+      const fareValue = route.fare?.value;
       if (fareValue < lowestFare) {
         lowestFare = fareValue;
         lowestFareBus = route;
@@ -345,17 +345,17 @@ const Home = ({ navigation }) => {
     switch (criteria) {
       case "time":
         sortedRoutes.sort((a, b) => {
-          return a.legs[0].duration.value - b.legs[0].duration.value;
+          return a?.legs[0].duration?.value - b?.legs[0].duration?.value;
         });
         break;
       case "distance":
         sortedRoutes.sort((a, b) => {
-          return a.legs[0].distance.value - b.legs[0].distance.value;
+          return a?.legs[0].distance?.value - b?.legs[0].distance?.value;
         });
         break;
       case "fare":
         sortedRoutes.sort((a, b) => {
-          return a.fare.value - b.fare.value;
+          return a.fare?.value - b.fare?.value;
         });
         break;
       default:
