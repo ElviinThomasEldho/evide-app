@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, Button } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Button, TouchableOpacity } from "react-native";
 import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
@@ -35,7 +35,7 @@ const RoutesModal = ({
             />
           </View>
           {routes.routeDetails.map((route, index) => (
-            <View key={index}>
+            <TouchableOpacity key={index}>
               <Text>Route Details {index + 1}:</Text>
               {/* <Text>Start Address: {route?.legs[0].start_address}</Text>
               <Text>End Address: {route?.legs[0].end_address}</Text> */}
@@ -55,7 +55,7 @@ const RoutesModal = ({
               <Text>
                 -------------------------------------------------------------
               </Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       )}
