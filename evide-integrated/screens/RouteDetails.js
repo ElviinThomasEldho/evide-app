@@ -546,10 +546,10 @@ const Home = ({ navigation }) => {
   const destinationRef = useRef();
 
   useEffect(() => {
-    console.log("Start : ", route.legs[0].start_location)
-    console.log("End : ", route.legs[0].end_location)
-    originRef.current.setAddressText(route.legs[0].start_address)
-    destinationRef.current.setAddressText(route.legs[0].end_address)
+    console.log("Start : ", route.legs[0].start_location);
+    console.log("End : ", route.legs[0].end_location);
+    originRef.current.setAddressText(route.legs[0].start_address);
+    destinationRef.current.setAddressText(route.legs[0].end_address);
     const getPermissions = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -569,15 +569,11 @@ const Home = ({ navigation }) => {
         longitudeDelta: 0.009,
       });
 
-      
       setPolylineCoordinates(
-        polyline
-          .decode(route.overview_polyline.points)
-          .map((coord) => {
-            return { latitude: coord[0], longitude: coord[1] };
-          })
+        polyline.decode(route.overview_polyline.points).map((coord) => {
+          return { latitude: coord[0], longitude: coord[1] };
+        })
       );
-
     };
 
     getPermissions();
@@ -636,7 +632,21 @@ const Home = ({ navigation }) => {
             {markers.map((marker, index) => (
               <Marker key={index} coordinate={marker} />
             ))}
-            {route && (<Polyline coordinates={polylineCoordinates}/>)}
+            {route && (
+              <Polyline
+                coordinates={polyline
+                  .decode(route.overview_polyline.points)
+                  .map((coord) => {
+                    return { latitude: coord[0], longitude: coord[1] };
+                  })}
+                strokeColor={
+                  "#" +
+                  "000000".substring(0, 6 - Math.round(0xffffff * Math.random()).toString(16).length) +
+                  Math.round(0xffffff * Math.random()).toString(16)
+                } // fallback for when `strokeColors` is not supported by the map-provider
+                strokeWidth={7}
+              />
+            )}
           </MapView>
           <BottomModalContainer>
             <RouteModal route={route} />
