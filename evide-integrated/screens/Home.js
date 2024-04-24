@@ -1,9 +1,9 @@
+import "react-native-gesture-handler";
 import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, Button } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import polyline from "@mapbox/polyline";
 
-import "react-native-gesture-handler";
 import {
   GestureHandlerRootView,
   ScrollView,
@@ -21,6 +21,7 @@ import * as Location from "expo-location";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import axios from "axios";
+import ProfileIcon from "../components/ProfileIcon";
 
 const Home = ({ navigation }) => {
   const [origin, setOrigin] = useState("");
@@ -174,12 +175,14 @@ const Home = ({ navigation }) => {
         destinationCoordinates
       );
 
-      console.log(originCoordinates, destinationCoordinates)
+      console.log(originCoordinates, destinationCoordinates);
 
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
       );
       setDirections(response.data);
+      console.log(        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
+    )
       console.log("Routes : ", response.data.routes);
       // console.log(
       //   "Polyline : ",
@@ -288,7 +291,7 @@ const Home = ({ navigation }) => {
         "Shortest Distance Bus:",
         shortestDistanceBus?.legs[0].distance.text
       );
-      console.log("Lowest Fare Bus:", lowestFareBus.fare?.value);
+      console.log("Lowest Fare Bus:", lowestFareBus?.fare?.value);
     } catch (error) {
       console.error("Error fetching coordinates: ", error);
     }
@@ -329,7 +332,7 @@ const Home = ({ navigation }) => {
     let lowestFareBus = null;
 
     for (const route of routeDetails) {
-      const fareValue = route.fare?.value;
+      const fareValue = route?.fare?.value;
       if (fareValue < lowestFare) {
         lowestFare = fareValue;
         lowestFareBus = route;
@@ -355,7 +358,7 @@ const Home = ({ navigation }) => {
         break;
       case "fare":
         sortedRoutes.sort((a, b) => {
-          return a.fare?.value - b.fare?.value;
+          return a?.fare?.value - b?.fare?.value;
         });
         break;
       default:
@@ -377,6 +380,10 @@ const Home = ({ navigation }) => {
             {/* <View style={styles.menuButtonContainer}>
               <MaterialIcons name="menu" size={20} color="#000"/>
             </View> */}
+            <ProfileIcon
+              onPress={() => navigation.toggleDrawer()} // Example onPress function
+              imageSource={require("../assets/img/profile.png")} // Example image source
+            />
             <GooglePlacesAutocomplete
               placeholder="Enter Origin"
               ref={originRef}
@@ -443,7 +450,17 @@ const Home = ({ navigation }) => {
           </MapView>
           <BottomModalContainer>
             {/* <ExploreModal navigation={navigation} /> */}
-            <RoutesModal selectedSortCriteria={selectedSortCriteria} sortRoutes={sortRoutes} origin={origin} destination={destination} routes={routes} shortestTimeBus={shortestTimeBus} shortestDistanceBus={shortestDistanceBus}  lowestFareBus={lowestFareBus} navigation={navigation} />
+            <RoutesModal
+              selectedSortCriteria={selectedSortCriteria}
+              sortRoutes={sortRoutes}
+              origin={origin}
+              destination={destination}
+              routes={routes}
+              shortestTimeBus={shortestTimeBus}
+              shortestDistanceBus={shortestDistanceBus}
+              lowestFareBus={lowestFareBus}
+              navigation={navigation}
+            />
           </BottomModalContainer>
         </View>
       </BottomSheetModalProvider>
