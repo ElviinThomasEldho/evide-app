@@ -1,0 +1,14 @@
+{
+    "start": "ലൊക്കേഷൻ ആരംഭിക്കുകത്",
+    "where": "എവിടേക്കാ?",
+    "greet": "ഹായ് ഗായത്രി",
+    "question": "നിനക്ക് എങ്ങോട്ട് പോകാനാണ് ഇഷ്ടം?",
+    "buttonClicked": "You clicked to button!",
+    "popular":"ജനത്പ്രിയമായത്",
+    "nearby":"അത്ടുത്ത്",
+    "mostReccomended":"മലയാത്ളം",
+    "someMall":"ത്മലയാളം",
+    "home":"മലത്യാളം",
+    "viewRoutes":"എത്വിടേക്ക",
+    "recommendedRoute": "എത്വിഎത്വി"
+  }
