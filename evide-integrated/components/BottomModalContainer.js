@@ -6,6 +6,7 @@ import {
   Button,
   Dimensions,
   Image,
+  TouchableOpacity,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -18,7 +19,7 @@ import {
 
 const windowHeight = Dimensions.get("window").height;
 
-export default BottomModalContainer = ({ navigation, children }) => {
+export default BottomModalContainer = ({ navigation, children, buttonTitle }) => {
   const bottomSheetModalRef = useRef(null);
   const snapPoints = useMemo(() => ["25%", "50%", "78%"], []);
 
@@ -43,9 +44,6 @@ export default BottomModalContainer = ({ navigation, children }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.modalButtonContainer}>
-        <Button title="Explore" onPress={handlePresentModal} />
-      </View>
       <View style={styles.BottomSheetContainer}>
         <BottomSheetModal
           ref={bottomSheetModalRef}
@@ -66,6 +64,12 @@ export default BottomModalContainer = ({ navigation, children }) => {
             </ScrollView>
           </View>
         </BottomSheetModal>
+        <TouchableOpacity
+          style={styles.modalButton}
+          onPress={handlePresentModal}
+        >
+          <Text style={{ color: "white" }}>{buttonTitle}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -76,15 +80,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  modalButtonContainer: {
-    top: "60vh", // Adjust the margin bottom to position the button lower
-    backgroundColor: "white",
+  modalButton: {
     borderRadius: 30,
-    borderColor: "black",
-    borderWidth: 1,
-    paddingHorizontal: 20,
+    // zIndex: 2,
+    backgroundColor: "#2675EC",
+    height: 40,
+    width: 250,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  BottomSheetContainer: {},
+  BottomSheetContainer: {
+  },
 });
 
 //hi

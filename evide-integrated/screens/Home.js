@@ -412,7 +412,6 @@ const Home = ({ navigation }) => {
                 language: "en",
               }}
             />
-            <Button title="Convert" onPress={getroutes} />
           </View>
 
           <MapView
@@ -448,8 +447,9 @@ const Home = ({ navigation }) => {
                 );
               })}
           </MapView>
-          <BottomModalContainer>
+          <BottomModalContainer buttonTitle="Find Routes">
             {/* <ExploreModal navigation={navigation} /> */}
+            <Button title="Find Routes" onPress={getroutes} />
             <RoutesModal
               selectedSortCriteria={selectedSortCriteria}
               sortRoutes={sortRoutes}

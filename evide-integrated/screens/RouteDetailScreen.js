@@ -1,30 +1,25 @@
 import "react-native-gesture-handler";
 import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, Button } from "react-native";
+import { StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import polyline from "@mapbox/polyline";
 
 import {
   GestureHandlerRootView,
-  ScrollView,
 } from "react-native-gesture-handler";
 import {
-  BottomSheetModal,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
 import BottomModalContainer from "../components/BottomModalContainer";
-import ExploreModal from "../components/ExploreModal";
-import RoutesModal from "../components/RoutesModal";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import * as Location from "expo-location";
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
-import axios from "axios";
 import ProfileIcon from "../components/ProfileIcon";
 import RouteModal from "../components/RouteModal";
 
-const Home = ({ navigation }) => {
+const RouteDetailScreen = ({ navigation }) => {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [directions, setDirections] = useState();
@@ -619,7 +614,7 @@ const Home = ({ navigation }) => {
                 language: "en",
               }}
             />
-            <Button title="Start Journey" />
+            {/* <Button title="Start Journey" /> */}
           </View>
 
           <MapView
@@ -644,11 +639,11 @@ const Home = ({ navigation }) => {
                   "000000".substring(0, 6 - Math.round(0xffffff * Math.random()).toString(16).length) +
                   Math.round(0xffffff * Math.random()).toString(16)
                 } // fallback for when `strokeColors` is not supported by the map-provider
-                strokeWidth={7}
+                strokeWidth={6}
               />
             )}
           </MapView>
-          <BottomModalContainer>
+          <BottomModalContainer buttonTitle="View Route">
             <RouteModal route={route} />
           </BottomModalContainer>
         </View>
@@ -746,4 +741,4 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 });
-export default Home;
+export default RouteDetailScreen;
