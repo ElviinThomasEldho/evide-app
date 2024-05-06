@@ -1,9 +1,9 @@
+import "react-native-gesture-handler";
 import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, Button } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import polyline from "@mapbox/polyline";
 
-import "react-native-gesture-handler";
 import {
   GestureHandlerRootView,
   ScrollView,
@@ -21,6 +21,7 @@ import * as Location from "expo-location";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import axios from "axios";
+import ProfileIcon from "../components/ProfileIcon";
 
 const Home = ({ navigation }) => {
   const [origin, setOrigin] = useState("");
@@ -174,12 +175,14 @@ const Home = ({ navigation }) => {
         destinationCoordinates
       );
 
-      console.log(originCoordinates, destinationCoordinates)
+      console.log(originCoordinates, destinationCoordinates);
 
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
       );
       setDirections(response.data);
+      console.log(        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
+    )
       console.log("Routes : ", response.data.routes);
       // console.log(
       //   "Polyline : ",
@@ -264,12 +267,12 @@ const Home = ({ navigation }) => {
 
       setMarkers(() => [
         {
-          latitude: response.data.routes[0].legs[0].start_location.lat,
-          longitude: response.data.routes[0].legs[0].start_location.lng,
+          latitude: response.data.routes[0]?.legs[0].start_location.lat,
+          longitude: response.data.routes[0]?.legs[0].start_location.lng,
         },
         {
-          latitude: response.data.routes[0].legs[0].end_location.lat,
-          longitude: response.data.routes[0].legs[0].end_location.lng,
+          latitude: response.data.routes[0]?.legs[0].end_location.lat,
+          longitude: response.data.routes[0]?.legs[0].end_location.lng,
         },
       ]);
       mapRef.current?.fitToElements();
@@ -283,12 +286,12 @@ const Home = ({ navigation }) => {
       setShortestTimeBus(() => findBusWithShortestTime(routeDetails));
       setLowestFareBus(() => findBusWithLowestFare(routeDetails));
 
-      console.log("Shortest Time Bus:", shortestTimeBus.legs[0].duration.text);
+      console.log("Shortest Time Bus:", shortestTimeBus?.legs[0].duration.text);
       console.log(
         "Shortest Distance Bus:",
-        shortestDistanceBus.legs[0].distance.text
+        shortestDistanceBus?.legs[0].distance.text
       );
-      console.log("Lowest Fare Bus:", lowestFareBus.fare.value);
+      console.log("Lowest Fare Bus:", lowestFareBus?.fare?.value);
     } catch (error) {
       console.error("Error fetching coordinates: ", error);
     }
@@ -299,7 +302,7 @@ const Home = ({ navigation }) => {
     let shortestTimeBus = null;
 
     for (const route of routeDetails) {
-      const durationValue = route.legs[0].duration.value;
+      const durationValue = route?.legs[0].duration?.value;
       if (durationValue < shortestTime) {
         shortestTime = durationValue;
         shortestTimeBus = route;
@@ -314,7 +317,7 @@ const Home = ({ navigation }) => {
     let shortestDistanceBus = null;
 
     for (const route of routeDetails) {
-      const distanceValue = route.legs[0].distance.value;
+      const distanceValue = route?.legs[0].distance?.value;
       if (distanceValue < shortestDistance) {
         shortestDistance = distanceValue;
         shortestDistanceBus = route;
@@ -329,7 +332,7 @@ const Home = ({ navigation }) => {
     let lowestFareBus = null;
 
     for (const route of routeDetails) {
-      const fareValue = route.fare.value;
+      const fareValue = route?.fare?.value;
       if (fareValue < lowestFare) {
         lowestFare = fareValue;
         lowestFareBus = route;
@@ -345,17 +348,17 @@ const Home = ({ navigation }) => {
     switch (criteria) {
       case "time":
         sortedRoutes.sort((a, b) => {
-          return a.legs[0].duration.value - b.legs[0].duration.value;
+          return a?.legs[0].duration?.value - b?.legs[0].duration?.value;
         });
         break;
       case "distance":
         sortedRoutes.sort((a, b) => {
-          return a.legs[0].distance.value - b.legs[0].distance.value;
+          return a?.legs[0].distance?.value - b?.legs[0].distance?.value;
         });
         break;
       case "fare":
         sortedRoutes.sort((a, b) => {
-          return a.fare.value - b.fare.value;
+          return a?.fare?.value - b?.fare?.value;
         });
         break;
       default:
@@ -377,6 +380,10 @@ const Home = ({ navigation }) => {
             {/* <View style={styles.menuButtonContainer}>
               <MaterialIcons name="menu" size={20} color="#000"/>
             </View> */}
+            <ProfileIcon
+              onPress={() => navigation.toggleDrawer()} // Example onPress function
+              imageSource={require("../assets/img/profile.png")} // Example image source
+            />
             <GooglePlacesAutocomplete
               placeholder="Enter Origin"
               ref={originRef}
@@ -405,7 +412,6 @@ const Home = ({ navigation }) => {
                 language: "en",
               }}
             />
-            <Button title="Convert" onPress={getroutes} />
           </View>
 
           <MapView
@@ -441,9 +447,20 @@ const Home = ({ navigation }) => {
                 );
               })}
           </MapView>
-          <BottomModalContainer>
+          <BottomModalContainer buttonTitle="Find Routes">
             {/* <ExploreModal navigation={navigation} /> */}
-            <RoutesModal selectedSortCriteria={selectedSortCriteria} sortRoutes={sortRoutes} origin={origin} destination={destination} routes={routes} shortestTimeBus={shortestTimeBus} shortestDistanceBus={shortestDistanceBus}  lowestFareBus={lowestFareBus} navigation={navigation} />
+            <Button title="Find Routes" onPress={getroutes} />
+            <RoutesModal
+              selectedSortCriteria={selectedSortCriteria}
+              sortRoutes={sortRoutes}
+              origin={origin}
+              destination={destination}
+              routes={routes}
+              shortestTimeBus={shortestTimeBus}
+              shortestDistanceBus={shortestDistanceBus}
+              lowestFareBus={lowestFareBus}
+              navigation={navigation}
+            />
           </BottomModalContainer>
         </View>
       </BottomSheetModalProvider>
