@@ -387,7 +387,10 @@ const Home = ({ navigation }) => {
             <GooglePlacesAutocomplete
               placeholder="Enter Origin"
               ref={originRef}
-              styles={{ textInput: styles.locationInput }}
+              styles={{
+                textInput: styles.locationInput,
+                listView: { position: "absolute", top: 50, zIndex: 2 },
+              }}
               onPress={(data, details = null) => {
                 setOrigin(data.description);
               }}
@@ -422,7 +425,7 @@ const Home = ({ navigation }) => {
             showsMyLocationButton
           >
             {markers.map((marker, index) => (
-              <Marker key={index} coordinate={marker} />
+              <Marker key={`m${index}`} coordinate={marker} />
             ))}
             {routes &&
               routes.routeDetails.map((route) => {
@@ -432,11 +435,7 @@ const Home = ({ navigation }) => {
                     return { latitude: coord[0], longitude: coord[1] };
                   });
 
-                var x = Math.round(0xffffff * Math.random()).toString(16);
-                var y = 6 - x.length;
-                var z = "000000";
-                var z1 = z.substring(0, y);
-                var color = "#" + z1 + x;
+                var color = "#FFC75B";
 
                 return (
                   <Polyline
