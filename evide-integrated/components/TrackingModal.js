@@ -6,47 +6,54 @@ import {
   Button,
   TouchableOpacity,
   Image,
+  Linking,
+  useWindowDimensions,
 } from "react-native";
 import React, { useEffect } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import HTML from "react-native-render-html";
+import HTML, { RenderHTML } from "react-native-render-html";
 import { getDistance } from "geolib";
 
-const TrackingModal = ({ route }) => {
+const TrackingModal = ({ route, currentStep }) => {
+  const { width } = useWindowDimensions();
+  const step = route?.legs[0].steps[currentStep];
+
   useEffect(() => {
-    // console.log("Route : ", route.legs[0].steps);
+    // console.log("Route : ", route?.legs[0].steps);
   }, []);
 
   return (
     <>
       {/* <Text>Routes:</Text> */}
       {/* <Button title="Start Journey" onPress={onLog} /> */}
-      {route && (
+      {step && (
         <ScrollView contentContainerStyle={{ alignItems: "center" }}>
-          {route.legs[0].steps.map((step, index) => (
+          {
             <>
-              <Text key={index + 1} contentWidth={100}>
-                {index + 1}.{" "}
+              <Text contentWidth={100}>
                 {step.html_instructions && `${step.html_instructions}`}
               </Text>
-              {step.travel_mode == "WALKING" &&
-                step.steps.map((s) => (
-                  <Text contentWidth={100}>
-                    <HTML source={{ html: s.html_instructions }} />
-                  </Text>
-                ))}
+              {step.steps?.map((s, i) => (
+                <RenderHTML
+                  key={`ss${i}`}
+                  contentWidth={width}
+                  source={{ html: s.html_instructions }}
+                />
+              ))}
               {step.travel_mode == "TRANSIT" && (
                 <>
                   <Text>
-                    {`${step.transit_details.line.vehicle.type}`}{" "}
-                    <Image
-                      style={{ width: 20, height: 20 }}
-                      source={{
-                        uri: `https://${step.transit_details.line.vehicle.icon.substring(
-                          2
-                        )}`,
-                      }}
-                    />{" "}
+                    {`${step.transit_details.line.vehicle.type}`}
+                    {step.transit_details && (
+                      <Image
+                        style={{ width: 20, height: 20 }}
+                        source={{
+                          uri: `https://${step.transit_details.line.vehicle.icon.substring(
+                            2
+                          )}`,
+                        }}
+                      />
+                    )}
                     (Stops : {`${step.transit_details.num_stops}`})
                   </Text>
                   <Text>{`Name : ${step.transit_details.line.name}`}</Text>
@@ -60,7 +67,7 @@ const TrackingModal = ({ route }) => {
                 </>
               )}
             </>
-          ))}
+          }
         </ScrollView>
       )}
     </>

@@ -11,7 +11,11 @@ import React, { useEffect } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import HTML from "react-native-render-html";
 
+import { useNavigation } from "@react-navigation/native";
+
 const RouteModal = ({ route }) => {
+  const navigation = useNavigation();
+
   useEffect(() => {
     // console.log("Route : ", route.legs[0].steps);
   }, []);
@@ -26,7 +30,12 @@ const RouteModal = ({ route }) => {
   return (
     <>
       <Text>Routes:</Text>
-      <Button title="Start Journey" onPress={onLog} />
+      <Button
+        title="Start Journey"
+        onPress={() => {
+          navigation.navigate("TrackingScreen", { routeValue: route });
+        }}
+      />
       {route && (
         <ScrollView>
           <Text>Route Details :</Text>
@@ -37,25 +46,30 @@ const RouteModal = ({ route }) => {
           <Text>Total Cost: {route?.fare?.text}</Text>
           {route.legs[0].steps.map((step, index) => (
             <>
-              <Text key={index}>
+              <Text key={`s${index}`}>
                 {index}. {step.html_instructions && `${step.html_instructions}`}
               </Text>
               {step.travel_mode == "WALKING" &&
-                step.steps.map((s) => (<View style={{flexDirection: "column"}}><Text>-</Text><HTML source={{ html: s.html_instructions }} /></View>
-                  
+                step.steps.map((s) => (
+                  <View style={{ flexDirection: "column" }}>
+                    <Text>-</Text>
+                    <HTML source={{ html: s.html_instructions }} />
+                  </View>
                 ))}
               {step.travel_mode == "TRANSIT" && (
                 <>
                   <Text>
                     {`${step.transit_details.line.vehicle.type}`}{" "}
-                    <Image
-                      style={{ width: 20, height: 20 }}
-                      source={{
-                        uri: `https://${step.transit_details.line.vehicle.icon.substring(
-                          2
-                        )}`,
-                      }}
-                    />{" "}
+                    {step.transit_details && (
+                      <Image
+                        style={{ width: 20, height: 20 }}
+                        source={{
+                          uri: `https://${step.transit_details.line.vehicle.icon.substring(
+                            2
+                          )}`,
+                        }}
+                      />
+                    )}{" "}
                     (Stops : {`${step.transit_details.num_stops}`})
                   </Text>
                   <Text>{`Name : ${step.transit_details.line.name}`}</Text>

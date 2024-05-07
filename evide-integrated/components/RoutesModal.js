@@ -1,6 +1,14 @@
-import { StyleSheet, Text, View, ScrollView, Button, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Button,
+  TouchableOpacity,
+} from "react-native";
 import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useNavigation } from "@react-navigation/native";
 
 const RoutesModal = ({
   routes,
@@ -12,6 +20,8 @@ const RoutesModal = ({
   origin,
   destination,
 }) => {
+  const navigation = useNavigation();
+
   return (
     <>
       <Text>Routes:</Text>
@@ -35,7 +45,12 @@ const RoutesModal = ({
             />
           </View>
           {routes.routeDetails.map((route, index) => (
-            <TouchableOpacity key={index}>
+            <TouchableOpacity
+              key={`r${index}`}
+              onPress={() => {
+                navigation.navigate("RouteDetailScreen", { routeValue: route });
+              }}
+            >
               <Text>Route Details {index + 1}:</Text>
               {/* <Text>Start Address: {route?.legs[0].start_address}</Text>
               <Text>End Address: {route?.legs[0].end_address}</Text> */}
