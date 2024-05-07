@@ -37,6 +37,8 @@ const App = () => {
   const originRef = useRef();
   const destinationRef = useRef();
 
+  const polyline = require('@mapbox/polyline');
+
   useEffect(() => {
     const getPermissions = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -186,18 +188,156 @@ const App = () => {
       const routeDetails = response.data.routes;
       const otmDetails=originToMetroResponse.data.routes;
       console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOOOOOOOOOOOOOOOOOAAAAAAAAOOOOOOO");
-      console.log(originToMetroResponse.data.routes);
-      console.log(metroToDestinationResponse.data.routes[0].legs);
+      const stations = {
+        "Aluva": {
+          "distance_from_previous_station": "0"
+        },
+        "Pulinchodu": {
+          "distance_from_previous_station": "1.729"
+        },
+        "Companypady": {
+          "distance_from_previous_station": "0.969"
+        },
+        "Ambattukavu": {
+          "distance_from_previous_station": "0.984"
+        },
+        "Muttom": {
+          "distance_from_previous_station": "0.937"
+        },
+        "Kalamassery": {
+          "distance_from_previous_station": "2.052"
+        },
+        "Cochin University": {
+          "distance_from_previous_station": "1.379"
+        },
+        "Pathadipalam": {
+          "distance_from_previous_station": "1.247"
+        },
+        "Edapally": {
+          "distance_from_previous_station": "1.393"
+        },
+        "Changampuzha Park": {
+          "distance_from_previous_station": "1.300"
+        },
+        "Palarivatom": {
+          "distance_from_previous_station": "1.008"
+        },
+        "J. L. N. Stadium": {
+          "distance_from_previous_station": "1.121"
+        },
+        "Kaloor": {
+          "distance_from_previous_station": "1.033"
+        },
+        "Town Hall": {
+          "distance_from_previous_station": "0.473"
+        },
+        "M. G. Road": {
+          "distance_from_previous_station": "1.203"
+        },
+        "Maharaja's College": {
+          "distance_from_previous_station": "1.173"
+        },
+        "Ernakulam South": {
+          "distance_from_previous_station": "0.856"
+        },
+        "Kadavanthra": {
+          "distance_from_previous_station": "1.185"
+        },
+        "Elamkulam": {
+          "distance_from_previous_station": "1.155"
+        },
+        "Vyttila": {
+          "distance_from_previous_station": "1.439"
+        },
+        "Thaikoodam": {
+          "distance_from_previous_station": "1.024"
+        },
+        "Pettah": {
+          "distance_from_previous_station": "1.183"
+        }
+      }
+      const metroStations = [
+        { name: "Aluva", lat: 10.1099872, lng: 76.3495149 },
+        { name: "Pulinchodu", lat: 10.0951, lng: 76.3466 },
+        { name: "Companypady", lat: 10.0873, lng: 76.3428 },
+        { name: "Ambattukavu", lat: 10.0792806, lng: 76.3388894 },
+        { name: "Muttom", lat: 10.0727011, lng: 76.33375 },
+        { name: "Kalamassery", lat: 10.0630188, lng: 76.3279715 },
+        { name: "CUSAT", lat: 10.0468491, lng: 76.3182738 },
+        { name: "Pathadipalam", lat: 10.0361, lng: 76.3144 },
+        { name: "Edapally", lat: 10.025263, lng: 76.3083641 },
+        { name: "Changampuzha Park", lat: 10.0152041, lng: 76.3023872 },
+        { name: "Palarivattom", lat: 10.0063373, lng: 76.3048456 },
+        { name: "JLN Stadium", lat: 10.0003003, lng: 76.2991852 },
+        { name: "Kaloor", lat: 9.9943, lng: 76.2914 },
+        { name: "Town Hall", lat: 9.9914, lng: 76.2884 },
+        { name: "MG Road", lat: 9.983496, lng: 76.282263 },
+        { name: "Maharaja’s College", lat: 9.9732357, lng: 76.2850733 },
+        { name: "Ernakulam South", lat: 9.9685, lng: 76.2893 },
+        { name: "Kadavanthra", lat: 9.966593, lng: 76.298074 },
+        { name: "Elamkulam", lat: 9.9672125, lng: 76.3086071 },
+        { name: "Vyttila", lat: 9.9673739, lng: 76.3204215 },
+        { name: "Thaikoodam", lat: 9.960079, lng: 76.323483 },
+        { name: "Pettah", lat: 9.9525568, lng: 76.3300456 },
+        { name: "Vadakkekotta", lat: 9.952771, lng: 76.339277 },
+        { name: "SN Junction", lat: 9.954662, lng: 76.345919 },
+        { name: "Thrippunithura", lat: 9.9504507, lng: 76.3517069 },
+      ]
+      function calculateDistanceBetweenStations(station1, station2) {
+        let distance = 0;
+        let foundStation1 = false;
+        let foundStation2 = false;
+        let reverseTravel = false;
+      
+        // Iterate over each station and accumulate the distances until reaching station1 and station2
+        for (const station in stations) {
+          if (!foundStation1 && station === station1) {
+            foundStation1 = true;
+          } else if (!foundStation1 && station === station2) {
+            reverseTravel = true;
+            foundStation1 = true;
+          } else if (foundStation1 && !foundStation2) {
+            if (!reverseTravel) {
+              distance += stations[station].distance_from_previous_station;
+            }
+            if (station === station2) {
+              foundStation2 = true;
+            }
+          }
+        }
+      
+        return foundStation2 ? distance : "Stations are not connected";
+      }
+      
+      const distanceBetweenStations=calculateDistanceBetweenStations(nearestMetroToOrigin.name,nearestMetroToDestination.name);
 
+
+      const findCoordsStation = (stationName) => {
+        const station = metroStations.find(station => station.name === stationName);
+        if (station) {
+          return { latitude: station.lat, longitude: station.lng };
+        } 
+      };
 
       const createCombinedRoutes = (originToMetroResponseData, metroToDestinationResponseData) => {
-        const combinedRoutes = [];
-      
+        const busAndMetroRoute = [];
+        
         originToMetroResponseData.forEach(originRoute => {
           metroToDestinationResponseData.forEach(destinationRoute => {
             const combinedRoute = {
               originToMetroLeg: originRoute,
               metroLeg: {
+
+                startStation: {
+                  name: nearestMetroToOrigin.name,
+                  latitude:nearestMetroToOrigin.lat,
+                  longitude:nearestMetroToOrigin.lng,
+                },
+                endStation: {
+                  name: nearestMetroToDestination.name,
+                  latitude:nearestMetroToDestination.lat,
+                  longitude:nearestMetroToDestination.lng,
+                },
                 fare: {
                   currency: "INR",
                   text: "₹30.00", 
@@ -208,6 +348,9 @@ const App = () => {
                   text: "30 mins",
                   value: 1800
                 },
+                distance :{
+                  value : distanceBetweenStations
+                },
                
                 summary: "Metro Transport",
                 warnings: ["Metro transport - Use caution"],
@@ -217,22 +360,72 @@ const App = () => {
             };
       
           
-            combinedRoutes.push(combinedRoute);
+            busAndMetroRoute.push(combinedRoute);
           });
         });
       
-        return combinedRoutes;
+        return busAndMetroRoute;
       };
       
       
-      const combinedRoutes = createCombinedRoutes(originToMetroResponse.data.routes, metroToDestinationResponse.data.routes);
-      console.log(combinedRoutes);
+      const busAndMetroRoute = createCombinedRoutes(originToMetroResponse.data.routes, metroToDestinationResponse.data.routes);
+      console.log(busAndMetroRoute);
       console.log("1st part");
-      console.log(combinedRoutes[0].originToMetroLeg);
+      console.log(busAndMetroRoute[0].originToMetroLeg.legs);
       console.log("2nd part");
-      console.log(combinedRoutes[0].metroLeg);
+      console.log(busAndMetroRoute[0].metroLeg);
       console.log("3rd part");
-      console.log(combinedRoutes[0].metroToDestinationLeg);
+      console.log(busAndMetroRoute[0].metroToDestinationLeg.legs);
+
+      function calculateTotalFareDistanceTimeandCoordinates(busAndMetroRoute) {
+        busAndMetroRoute.forEach(route => {
+            const fare1 = route.originToMetroLeg.fare ? route.originToMetroLeg.fare.value : 0;
+            const fare2 = route.metroLeg.fare ? route.metroLeg.fare.value : 0;
+            const fare3 = route.metroToDestinationLeg.fare ? route.metroToDestinationLeg.fare.value : 0;
+            const totalFare = fare1 + fare2 + fare3;
+    
+            // Add total fare to the existing route object
+            route.totalFare = totalFare;
+            
+
+            const time1=route.originToMetroLeg.legs[0].duration ? route.originToMetroLeg.legs[0].duration.value : 0;
+            const time2 = route.metroLeg.duration ? route.metroLeg.duration.value : 0;
+            const time3 = route.metroToDestinationLeg.legs[0].duration ? route.metroToDestinationLeg.legs[0].duration.value : 0;
+            const totalTime = (time1 + time2 + time3)/60;
+    
+            // Add total fare to the existing route object
+            route.totalTime = totalTime;
+
+            const dist1=route.originToMetroLeg.legs[0].distance ? route.originToMetroLeg.legs[0].distance.value : 0;
+            // const dist2 = route.metroLeg.duration ? route.metroLeg.duration.value : 0;
+            const dist3 = route.metroToDestinationLeg.legs[0].distance ? route.metroToDestinationLeg.legs[0].distance.value : 0;
+            const totalDistance = dist1+dist3;
+    
+            // Add total fare to the existing route object
+            route.totalDistance = totalDistance;
+
+            const finalPolylineCoords=[]
+            finalPolylineCoords.push(route.originToMetroLeg.overview_polyline.points)
+            const metroCoords = [
+              [route.metroLeg.startStation.latitude, route.metroLeg.startStation.longitude],
+              [route.metroLeg.endStation.latitude, route.metroLeg.endStation.longitude]
+            ];
+            const metroEncodedCoords=polyline.encode(metroCoords);
+            finalPolylineCoords.push(metroEncodedCoords)
+            finalPolylineCoords.push(route.metroToDestinationLeg.overview_polyline.points)
+            route.finalPolylineCoords=finalPolylineCoords;
+
+
+        });
+    
+        return busAndMetroRoute;
+    }
+    const finalBusandMetroRoutes=calculateTotalFareDistanceTimeandCoordinates(busAndMetroRoute);
+    console.log(finalBusandMetroRoutes);
+
+
+    
+    
 
 
     
@@ -250,6 +443,8 @@ const App = () => {
             return { latitude: coord[0], longitude: coord[1] };
           })
       );
+
+      
 
       setMarkers(() => [
         {
@@ -272,10 +467,10 @@ const App = () => {
       setShortestTimeBus(() => findBusWithShortestTime(routeDetails));
       setLowestFareBus(() => findBusWithLowestFare(routeDetails));
 
-      console.log("Shortest Time Bus:", shortestTimeBus.legs[0].duration.text);
+      console.log("Shortest Time Bus:", shortestTimeBus.legs[0].duration?.text);
       console.log(
         "Shortest Distance Bus:",
-        shortestDistanceBus.legs[0].distance.text
+        shortestDistanceBus.legs[0].distance?.text
       );
       console.log("Lowest Fare Bus:", lowestFareBus.fare.value);
     } catch (error) {
@@ -329,6 +524,74 @@ const App = () => {
   };
 
 
+
+  const shortestTimeOption = () => {
+    console.log(shortestTimeBus);
+
+    return (
+      <View>
+        <Text>Route Details for Shortest Time</Text>
+        <Text>Start Address: {shortestTimeBus.legs[0].start_address}</Text>
+        <Text>End Address: {shortestTimeBus.legs[0].end_address}</Text>
+        <Text>Total Distance: {shortestTimeBus.legs[0].distance?.text}</Text>
+        <Text>Total Time: {shortestTimeBus.legs[0].duration?.text}</Text>
+        <Text>Total Cost: {shortestTimeBus.fare?.text}</Text>
+        {shortestTimeBus.legs[0].steps.map((step, index) => (
+          <>
+            <Text>
+              {index}. {step.html_instructions && `${step.html_instructions}`}
+              {step.transit_details &&
+                ` - No. of Stops: ${step.transit_details.num_stops}`}
+            </Text>
+          </>
+        ))}
+      </View>
+    );
+  };
+
+  const shortestDistanceOption = () => {
+    return (
+      <View>
+        <Text>Route Details for Shortest Distance</Text>
+        <Text>Start Address: {shortestDistanceBus.legs[0].start_address}</Text>
+        <Text>End Address: {shortestDistanceBus.legs[0].end_address}</Text>
+        <Text>Total Distance: {shortestDistanceBus.legs[0].distance?.text}</Text>
+        <Text>Total Time: {shortestDistanceBus.legs[0].duration?.text}</Text>
+        <Text>Total Cost: {shortestDistanceBus.fare?.text}</Text>
+        {shortestDistanceBus.legs[0].steps.map((step, index) => (
+          <>
+            <Text>
+              {index}. {step.html_instructions && `${step.html_instructions}`}
+              {step.transit_details &&
+                ` - No. of Stops: ${step.transit_details.num_stops}`}
+            </Text>
+          </>
+        ))}
+      </View>
+    );
+  };
+
+  const lowestFareOption = () => {
+    return (
+      <View>
+        <Text>Route Details for Lowest Fare</Text>
+        <Text>Start Address: {lowestFareBus.legs[0].start_address}</Text>
+        <Text>End Address: {lowestFareBus.legs[0].end_address}</Text>
+        <Text>Total Distance: {lowestFareBus.legs[0].distance?.text}</Text>
+        <Text>Total Time: {lowestFareBus.legs[0].duration?.text}</Text>
+        <Text>Total Cost: {lowestFareBus.fare?.text}</Text>
+        {lowestFareBus.legs[0].steps.map((step, index) => (
+          <>
+            <Text>
+              {index}. {step.html_instructions && `${step.html_instructions}`}
+              {step.transit_details &&
+                ` - No. of Stops: ${step.transit_details.num_stops}`}
+            </Text>
+          </>
+        ))}
+      </View>
+    );
+  };
   const sortRoutes = (criteria) => {
     let sortedRoutes = [...routes.routeDetails];
 
@@ -431,10 +694,10 @@ const App = () => {
             <Text>Start Address: {shortestTimeBus?.legs[0].start_address}</Text>
             <Text>End Address: {shortestTimeBus?.legs[0].end_address}</Text>
             <Text>
-              Total Distance: {shortestTimeBus?.legs[0].distance.text}
+              Total Distance: {shortestTimeBus?.legs[0].distance?.text}
             </Text>
-            <Text>Total Time: {shortestTimeBus?.legs[0].duration.text}</Text>
-            <Text>Total Cost: {shortestTimeBus?.fare.text}</Text>
+            <Text>Total Time: {shortestTimeBus?.legs[0].duration?.text}</Text>
+            <Text>Total Cost: {shortestTimeBus?.fare?.text}</Text>
             {shortestTimeBus?.legs[0].steps.map((step, index) => (
               <>
                 <Text>
@@ -456,12 +719,12 @@ const App = () => {
             </Text>
             <Text>End Address: {shortestDistanceBus?.legs[0].end_address}</Text>
             <Text>
-              Total Distance: {shortestDistanceBus?.legs[0].distance.text}
+              Total Distance: {shortestDistanceBus?.legs[0].distance?.text}
             </Text>
             <Text>
-              Total Time: {shortestDistanceBus?.legs[0].duration.text}
+              Total Time: {shortestDistanceBus?.legs[0].duration?.text}
             </Text>
-            <Text>Total Cost: {shortestDistanceBus?.fare.text}</Text>
+            <Text>Total Cost: {shortestDistanceBus?.fare?.text}</Text>
             {shortestDistanceBus?.legs[0].steps.map((step, index) => (
               <>
                 <Text>
@@ -480,9 +743,9 @@ const App = () => {
             <Text>Route Details for Lowest Fare</Text>
             <Text>Start Address: {lowestFareBus?.legs[0].start_address}</Text>
             <Text>End Address: {lowestFareBus?.legs[0].end_address}</Text>
-            <Text>Total Distance: {lowestFareBus?.legs[0].distance.text}</Text>
-            <Text>Total Time: {lowestFareBus?.legs[0].duration.text}</Text>
-            <Text>Total Cost: {lowestFareBus?.fare.text}</Text>
+            <Text>Total Distance: {lowestFareBus?.legs[0].distance?.text}</Text>
+            <Text>Total Time: {lowestFareBus?.legs[0].duration?.text}</Text>
+            <Text>Total Cost: {lowestFareBus?.fare?.text}</Text>
             {lowestFareBus?.legs[0].steps.map((step, index) => (
               <>
                 <Text>
@@ -528,9 +791,9 @@ const App = () => {
               <Text>Route Details {index + 1}:</Text>
               <Text>Start Address: {route?.legs[0].start_address}</Text>
               <Text>End Address: {route?.legs[0].end_address}</Text>
-              <Text>Total Distance: {route?.legs[0].distance.text}</Text>
-              <Text>Total Time: {route?.legs[0].duration.text}</Text>
-              <Text>Total Cost: {route?.fare.text}</Text>
+              <Text>Total Distance: {route?.legs[0].distance?.text}</Text>
+              <Text>Total Time: {route?.legs[0].duration?.text}</Text>
+              <Text>Total Cost: {route?.fare?.text}</Text>
               {route.legs[0].steps.map((step, index) => (
                 <>
                   <Text>
