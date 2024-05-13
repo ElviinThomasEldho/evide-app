@@ -1,39 +1,23 @@
-import "react-native-gesture-handler";
 import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, Button } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import polyline from "@mapbox/polyline";
-
-import {
-  GestureHandlerRootView,
-  ScrollView,
-} from "react-native-gesture-handler";
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-} from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import BottomModalContainer from "../components/BottomModalContainer";
-import ExploreModal from "../components/ExploreModal";
-import RoutesModal from "../components/RoutesModal";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import * as Location from "expo-location";
-
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-
 import axios from "axios";
 import ProfileIcon from "../components/ProfileIcon";
+
+import RoutesModal from "../components/RoutesModal";
 
 const Home = ({ navigation }) => {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [directions, setDirections] = useState();
   const [routes, setRoutes] = useState();
 
-  const [location, setLocation] = useState();
-  const [address, setAddress] = useState();
   const [markers, setMarkers] = useState([]);
-
-  const [polylineCoordinates, setPolylineCoordinates] = useState([]);
 
   const [shortestTimeBus, setShortestTimeBus] = useState();
   const [shortestDistanceBus, setShortestDistanceBus] = useState();
@@ -41,11 +25,16 @@ const Home = ({ navigation }) => {
 
   const [selectedSortCriteria, setSelectedSortCriteria] = useState(null);
 
+  // const API_KEY = process.env.API_KEY;
+  const API_KEY = "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384";
+
   const mapRef = useRef();
   const originRef = useRef();
   const destinationRef = useRef();
 
   useEffect(() => {
+    console.log("API_KEY : ", API_KEY);
+
     const getPermissions = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -54,7 +43,6 @@ const Home = ({ navigation }) => {
       }
 
       let currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation);
       console.log("Location : ");
       console.log(currentLocation);
 
@@ -65,19 +53,17 @@ const Home = ({ navigation }) => {
         longitudeDelta: 0.009,
       });
 
-      const API_KEY = "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384";
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&key=${API_KEY}`
       );
       console.log(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&key=${API_KEY}`
       );
-      console.log(response.data.results[0].formatted_address);
       originRef.current.setAddressText(
-        response.data.results[0].formatted_address
+        response.data.results[0]?.formatted_address
       );
       destinationRef.current.focus();
-      setOrigin(response.data.results[0].formatted_address);
+      setOrigin(response.data.results[0]?.formatted_address);
     };
 
     getPermissions();
@@ -144,31 +130,29 @@ const Home = ({ navigation }) => {
 
   const getroutes = async () => {
     try {
-      const API_KEY = "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384";
-
       const originResponse = await axios.get(
         "https://maps.googleapis.com/maps/api/geocode/json",
         {
           params: {
             address: origin,
-            key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
+            key: API_KEY,
           },
         }
       );
       const originCoordinates =
-        originResponse.data.results[0].geometry.location;
+        originResponse.data.results[0]?.geometry.location;
 
       const destinationResponse = await axios.get(
         "https://maps.googleapis.com/maps/api/geocode/json",
         {
           params: {
             address: destination,
-            key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
+            key: API_KEY,
           },
         }
       );
       const destinationCoordinates =
-        destinationResponse.data.results[0].geometry.location;
+        destinationResponse.data.results[0]?.geometry.location;
 
       const nearestMetroToOrigin = findNearestMetroStation(originCoordinates);
       const nearestMetroToDestination = findNearestMetroStation(
@@ -180,9 +164,10 @@ const Home = ({ navigation }) => {
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
       );
-      setDirections(response.data);
-      console.log(        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
-    )
+      // setDirections(response.data);
+      console.log(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
+      );
       console.log("Routes : ", response.data.routes);
       // console.log(
       //   "Polyline : ",
@@ -395,9 +380,10 @@ const Home = ({ navigation }) => {
                 setOrigin(data.description);
               }}
               query={{
-                key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
+                key: API_KEY,
                 language: "en",
               }}
+              currentLocation
             />
             <GooglePlacesAutocomplete
               ref={destinationRef}
@@ -411,7 +397,7 @@ const Home = ({ navigation }) => {
                 setDestination(data.description);
               }}
               query={{
-                key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
+                key: API_KEY,
                 language: "en",
               }}
             />
@@ -435,12 +421,40 @@ const Home = ({ navigation }) => {
                     return { latitude: coord[0], longitude: coord[1] };
                   });
 
-                var color = "#FFC75B";
+                function generateRandomShade(hexColor) {
+                  // Parse the hex color string into RGB components
+                  var red = parseInt(hexColor.substring(0, 2), 16);
+                  var green = parseInt(hexColor.substring(2, 4), 16);
+                  var blue = parseInt(hexColor.substring(4, 6), 16);
+
+                  // Generate random offsets for each RGB component
+                  var offsetRed = Math.floor(Math.random() * 51) - 25; // Random number between -25 and 25
+                  var offsetGreen = Math.floor(Math.random() * 51) - 25;
+                  var offsetBlue = Math.floor(Math.random() * 51) - 25;
+
+                  // Apply the offsets to the RGB components
+                  red = Math.min(255, Math.max(0, red + offsetRed));
+                  green = Math.min(255, Math.max(0, green + offsetGreen));
+                  blue = Math.min(255, Math.max(0, blue + offsetBlue));
+
+                  // Convert the RGB components back to hex
+                  var newHexColor =
+                    "#" +
+                    ((1 << 24) + (red << 16) + (green << 8) + blue)
+                      .toString(16)
+                      .slice(1);
+
+                  return newHexColor;
+                }
+
+                // Example usage:
+                var baseColor = "FFC75B";
+                var randomShade = generateRandomShade(baseColor);
 
                 return (
                   <Polyline
                     coordinates={coords}
-                    strokeColor={color} // fallback for when `strokeColors` is not supported by the map-provider
+                    strokeColor={randomShade} // fallback for when `strokeColors` is not supported by the map-provider
                     strokeWidth={7}
                   />
                 );

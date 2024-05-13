@@ -21,7 +21,7 @@ const windowHeight = Dimensions.get("window").height;
 
 export default BottomModalContainer = ({ navigation, children, buttonTitle }) => {
   const bottomSheetModalRef = useRef(null);
-  const snapPoints = useMemo(() => ["25%", "50%", "78%"], []);
+  const snapPoints = useMemo(() => ["25%", "40%", "75%"], []);
 
   useEffect(() => {
     bottomSheetModalRef.current?.present();

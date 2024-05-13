@@ -15,6 +15,9 @@ import { useNavigation } from "@react-navigation/native";
 
 const RouteModal = ({ route }) => {
   const navigation = useNavigation();
+  
+  // const API_KEY = process.env.API_KEY;
+  const API_KEY = "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384";
 
   useEffect(() => {
     // console.log("Route : ", route.legs[0].steps);
@@ -49,7 +52,7 @@ const RouteModal = ({ route }) => {
               <Text key={`s${index}`}>
                 {index}. {step.html_instructions && `${step.html_instructions}`}
               </Text>
-              {step.travel_mode == "WALKING" &&
+              {/* {step.travel_mode == "WALKING" &&
                 step.steps.map((s) => (
                   <View style={{ flexDirection: "column" }}>
                     <Text>-</Text>
@@ -81,7 +84,7 @@ const RouteModal = ({ route }) => {
                     {`Arrival Stop : ${step.transit_details.arrival_stop.name} | ${step.transit_details.arrival_time.text}`}
                   </Text>
                 </>
-              )}
+              )} */}
             </>
           ))}
         </ScrollView>

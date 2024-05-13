@@ -1,32 +1,16 @@
-import "react-native-gesture-handler";
-import React, { useState, useEffect, useRef, useContext } from "react";
-import { StyleSheet, View, Button, Linking, Text } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, View, Text, Linking, TouchableOpacity } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
-import polyline from "@mapbox/polyline";
-
-import {
-  GestureHandlerRootView,
-  ScrollView,
-} from "react-native-gesture-handler";
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  TouchableOpacity,
-} from "@gorhom/bottom-sheet";
-import BottomModalContainer from "../components/BottomModalContainer";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import * as Location from "expo-location";
+import { getDistance } from "geolib";
+import polyline from "@mapbox/polyline";
 
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-
-import axios from "axios";
 import ProfileIcon from "../components/ProfileIcon";
-import RouteModal from "../components/RouteModal";
+import BottomModalContainer from "../components/BottomModalContainer";
 import TrackingModal from "../components/TrackingModal";
-import { findNearest } from "geolib";
-import { getDistance } from "geolib"; // You can use geolib library for distance calculation
-
-import { RouteContext } from "../store/routeContext";
 
 import { useRoute } from "@react-navigation/native";
 
@@ -34,6 +18,8 @@ const TrackingScreen = ({ navigation }) => {
   const r = useRoute();
   const { routeValue } = r.params; 
  
+  // const API_KEY = process.env.API_KEY;
+  const API_KEY = "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384";
 
   const [markers, setMarkers] = useState([]);
 
@@ -78,26 +64,25 @@ const TrackingScreen = ({ navigation }) => {
       //     return { latitude: coord[0], longitude: coord[1] };
       //   })
       // );
+
+      originRef.current.setAddressText(route.legs[0].start_address)
+      destinationRef.current.setAddressText(route.legs[0].end_address)
     };
 
     getPermissions();
     // console.log("Steps: ", route?.legs[0].steps);
 
-    route?.legs[0].steps.map((parentStep, index) => {
-      console.log(parentStep.html_instructions);
-
-      setMarkers((old) => [
-        ...old,
-        {
-          latitude: parentStep.end_location.lat,
-          longitude: parentStep.end_location.lng,
-          instruction: parentStep.html_instructions,
-          completed: false,
-        },
-      ]);
-    });
-
-    console.log("Markers : ", markers);
+    if (route?.legs[0]?.steps) {
+      const newMarkers = route.legs[0].steps.map((parentStep) => ({
+        latitude: parentStep.end_location.lat,
+        longitude: parentStep.end_location.lng,
+        instruction: parentStep.html_instructions,
+        completed: false,
+      }));
+    
+      setMarkers((oldMarkers) => [...oldMarkers, ...newMarkers]);
+    }
+    
     if (route?.legs[0].steps[currentStep].travel_mode == "WALKING")
       setShowNavigate(true);
     console.log(route?.legs[0].steps[currentStep].travel_mode);
