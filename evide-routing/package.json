@@ -11,7 +11,7 @@
   "dependencies": {
     "@mapbox/polyline": "^1.2.1",
     "axios": "^1.6.8",
-    "expo": "~50.0.14",
+    "expo": "^51.0.2",
     "expo-location": "^16.5.5",
     "expo-status-bar": "~1.11.1",
     "i18next": "^23.11.2",

@@ -481,7 +481,11 @@ const App = () => {
           duration: 30,
           distance: 500,
           fare_text: "₹25.00",
-          duration_text:"30 mins"
+          duration_text: "30 mins",
+          lat1: 10.0164,
+          lng1: 76.3646,
+          lat2: 9.9565,
+          lng2: 76.3157,
         },
         {
           station1: "Vytilla",
@@ -490,7 +494,11 @@ const App = () => {
           duration: 30,
           distance: 500,
           fare_text: "₹25.00",
-          duration_text:"30 mins"
+          duration_text: "30 mins",
+          lat1: 9.9565,
+          lng1: 76.3157,
+          lat2: 10.0164,
+          lng2: 76.3646,
         },
         {
           station1: "High Court",
@@ -499,7 +507,11 @@ const App = () => {
           duration: 20,
           distance: 500,
           fare_text: "₹30.00",
-          duration_text:"20 mins"
+          duration_text: "20 mins",
+          lat1: 9.983774,
+          lng1: 76.2730021,
+          lat2: 10.1581,
+          lng2: 76.2227,
         },
         {
           station1: "Vypeen",
@@ -508,7 +520,11 @@ const App = () => {
           duration: 20,
           distance: 500,
           fare_text: "₹25.00",
-          duration_text:"20 mins"
+          duration_text: "20 mins",
+          lat1: 10.1581,
+          lng1: 76.2227,
+          lat2: 9.983774,
+          lng2: 76.2730021,
         },
       ];
 
@@ -553,6 +569,8 @@ const App = () => {
       const nearestWaterMetroToDestination = findNearestWaterMetroStation(
         destinationCoordinates
       );
+      console.log(nearestWaterMetroToOrigin)
+      console.log(nearestWaterMetroToDestination)
 
       const originToWaterMetroResponse = await axios.get(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${nearestWaterMetroToOrigin.lat},${nearestWaterMetroToOrigin.lng}&key=${API_KEY}&mode=transit&alternatives=true`
@@ -566,37 +584,115 @@ const App = () => {
       const waterMetroToDestinationResponseData =
         waterMetroToDestinationResponse.data.routes;
 
-      const ifConnected = (
-        nearestWaterMetroToOrigin,
-        nearestWaterMetroToDestination
-      ) => {
-        for (let i = 0; i < waterMetroConnectedness.length; i++) {
-          if (
-            waterMetroConnectedness[i].station1 === nearestWaterMetroToOrigin &&
-            waterMetroConnectedness[i].station2 ===
-              nearestWaterMetroToDestination
-          ) {
-            
-            return i+1;
+      
+        const ifConnected = (
+          nearestWaterMetroToOrigin,
+          nearestWaterMetroToDestination
+        ) => {
+          for (let i = 0; i < waterMetroConnectedness.length; i++)
+            {
+              if(waterMetroConnectedness[i].station1 === nearestWaterMetroToOrigin && waterMetroConnectedness[i].station2===nearestWaterMetroToDestination)
+              {
+                  return i;
+                  
+              }
+            }
+            for (let i = 0; i < waterMetroConnectedness.length; i++){
+               if (waterMetroConnectedness[i].station1 === nearestWaterMetroToOrigin) 
+              {
+              const waterMetroStationOrigin1 = waterMetroConnectedness[i].station1;
+              const waterMetroStationDestination1 = waterMetroConnectedness[i].station2;
+              for (let j = 0; j < waterMetroConnectedness.length; j++) {
+                if (
+                  waterMetroConnectedness[j].station2 == nearestWaterMetroToDestination
+                ) {
+                  const waterMetroStationOrigin2 = waterMetroConnectedness[j].station1;
+                  const waterMetroStationDestination2 =
+                    waterMetroConnectedness[j].station2;
+                  const notConnectedWaterMetroOrder = [
+                    waterMetroStationOrigin1,
+                    waterMetroStationDestination1,
+                    waterMetroStationOrigin2,
+                    waterMetroStationDestination2,
+                  ];
+                  return notConnectedWaterMetroOrder;
+                }
+              }
+            }
+          }
+          return null;
+        };
+
+      console.log("printing")
+      const notConnectedWaterMetroOrder=ifConnected(nearestWaterMetroToOrigin.name,nearestWaterMetroToDestination.name)
+      console.log(notConnectedWaterMetroOrder)
+      
+        console.log(notConnectedWaterMetroOrder)
+        const vales=[]
+        for(let i=0;i<waterMetroConnectedness.length;i++)
+        {
+            if(waterMetroConnectedness[i].station1===notConnectedWaterMetroOrder[0])
+            {
+              const index=i;
+              vales.push(index)
+              {
+                for(let j=0;j<waterMetroConnectedness.length;j++)
+                {
+                  if(waterMetroConnectedness[j].station1===notConnectedWaterMetroOrder[2])
+                    {
+                      const index=j;
+                      vales.push(index)
+                    }
+                }
+            }
           }
         }
-        return 0;
-      };
+        console.log(vales)
+        const index1=vales[0];
+        const index2=vales[1];
+
+        
+        if(notConnectedWaterMetroOrder!=0||notConnectedWaterMetroOrder!=1||notConnectedWaterMetroOrder!=2||notConnectedWaterMetroOrder!=3||notConnectedWaterMetroOrder!=4)
+        {
+        const originToWaterMetro1Response = await axios.get(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${waterMetroConnectedness[index1].lat1},${waterMetroConnectedness[index1].lng1}&key=${API_KEY}&mode=transit&alternatives=true`
+        );
+        const waterMetro1ToWaterMetro2Response = await axios.get(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${waterMetroConnectedness[index1].lat2},${waterMetroConnectedness[index1].lng2}&destination=${waterMetroConnectedness[index2].lat1},${waterMetroConnectedness[index2].lng1}&key=${API_KEY}&mode=transit&alternatives=true`
+        );
+        const waterMetro2ToDestinationResponse = await axios.get(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${waterMetroConnectedness[index2].lat2},${waterMetroConnectedness[index2].lng2}&destination=${destination}&key=${API_KEY}&mode=transit&alternatives=true`
+        );
+
+        const originToWaterMetro1ResponseData =
+        originToWaterMetro1Response.data.routes;
+        const waterMetro1ToWaterMetro2ResponseData =
+        waterMetro1ToWaterMetro2Response.data.routes;
+        const waterMetro2ToDestinationResponseData =
+        waterMetro2ToDestinationResponse.data.routes;}
+      
+
+      // console.log("dateils final")
+      // console.log(originToWaterMetro1ResponseData)
+      // console.log(waterMetro1ToWaterMetro2ResponseData)
+      // console.log(waterMetro2ToDestinationResponseData)
+
 
       const waterMetroRoutes = () => {
         const id = ifConnected(
           nearestWaterMetroToOrigin.name,
           nearestWaterMetroToDestination.name
         );
-        if (id != 0) {
+        console.log(id)
+        if (id==0||id==2||id==3||id==4||id==5||id==1) {
           const busAndWaterMetroRoute = [];
-          const id1=id-1;
-
+          const id1 = id - 1;
+          console.log("inside")
           originToWaterMetroResponseData.forEach((originRoute) => {
             waterMetroToDestinationResponseData.forEach((destinationRoute) => {
               const combinedWaterMetroRoute = {
                 originToWaterMetroLeg: originRoute,
-                WatermetroLeg: {
+                waterMetroLeg: {
                   startStation: {
                     name: nearestWaterMetroToOrigin.name,
                     latitude: nearestWaterMetroToOrigin.lat,
@@ -632,15 +728,162 @@ const App = () => {
             });
           });
 
+          
           return busAndWaterMetroRoute;
-        } else {
-          return 0;
-        }
-      };
+          
+        } else if(id.length!=0)
+        {
+          const busAndWaterMetroRoute = [];  
+          originToWaterMetro1ResponseData.forEach((route1) => {
+            waterMetro1ToWaterMetro2ResponseData.forEach((route2) => { 
+                waterMetroToDestinationResponseData.forEach((route3) => {
+                    const combinedWaterMetroRoute = {
+                        originToWaterMetro1Leg: route1, 
+                        waterMetroLeg1: {
+                            startStation: {
+                                name: waterMetroConnectedness[index1].station1,
+                                latitude:waterMetroConnectedness[index1].lat1,
+                                longitude:waterMetroConnectedness[index1].lng1,
+                            },
+                            endStation: {
+                                name: waterMetroConnectedness[index1].station2,
+                                latitude: waterMetroConnectedness[index1].lat2,
+                                longitude: waterMetroConnectedness[index1].lng2,
+                            },
+                            fare: {
+                                currency: "INR",
+                                text: waterMetroConnectedness[index1].fare_text,
+                                value: waterMetroConnectedness[index1].fare,
+                            },
+                            legs: [],
+                            duration: {
+                                text: waterMetroConnectedness[index1].duration_text,
+                                value: waterMetroConnectedness[index1].duration,
+                            },
+                            summary: "Water Metro Transport",
+                            warnings: ["Water Metro transport - Use caution"],
+                            waypoint_order: [],
+                        },
+                        waterMetro1ToWaterMetro2Leg:route2,
+                        waterMetroLeg2: {
+                          startStation: {
+                              name: waterMetroConnectedness[index2].station1,
+                              latitude:waterMetroConnectedness[index2].lat1,
+                              longitude:waterMetroConnectedness[index2].lng1,
+                          },
+                          endStation: {
+                              name: waterMetroConnectedness[index2].station2,
+                              latitude: waterMetroConnectedness[index2].lat2,
+                              longitude: waterMetroConnectedness[index2].lng2,
+                          },
+                          fare: {
+                              currency: "INR",
+                              text: waterMetroConnectedness[index2].fare_text,
+                              value: waterMetroConnectedness[index2].fare,
+                          },
+                          legs: [],
+                          duration: {
+                              text: waterMetroConnectedness[index2].duration_text,
+                              value: waterMetroConnectedness[index2].duration,
+                          },
+                          summary: "Water Metro Transport",
+                          warnings: ["Water Metro transport - Use caution"],
+                          waypoint_order: [],
+                      },
+                        waterMetroToDestinationLeg: route3,
+                    };
+        
+                    busAndWaterMetroRoute.push(combinedWaterMetroRoute);
+                });
+            });
+        });
+        
+        return busAndWaterMetroRoute;
+        
+      }
+      else{
+        return null;
+      }
+    };
+
+      console.log("hi");
 
       const combinedWaterAndBusRoute = waterMetroRoutes();
-      console.log("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
-      console.log(combinedWaterAndBusRoute);
+      console.log(combinedWaterAndBusRoute[0]);
+
+      function calculateTotalFareDistanceTimeandCoordinatesWaterMetro(
+        combinedWaterAndBusRoute
+      ) {
+        combinedWaterAndBusRoute.forEach((route) => {
+          const fare1 = route.originToWaterMetroLeg?.fare
+            ? route.originToWaterMetroLeg?.fare.value
+            : 0;
+          const fare2 = route.waterMetroLeg?.fare
+            ? route.waterMetroLeg.fare.value
+            : 0;
+          const fare3 = route.waterMetroToDestinationLeg?.fare
+            ? route.waterMetroToDestinationLeg?.fare.value
+            : 0;
+          const totalFare = fare1 + fare2 + fare3;
+
+          // Add total fare to the existing route object
+          route.totalFare = totalFare;
+
+          const time1 = route.originToWaterMetroLeg?.legs[0].duration
+            ? route.originToWaterMetroLeg?.legs[0].duration.value
+            : 0;
+          const time2 = route.waterMetroLeg?.duration
+            ? route.waterMetroLeg?.duration.value
+            : 0;
+          const time3 = route.waterMetroToDestinationLeg?.legs[0].duration
+            ? route.waterMetroToDestinationLeg?.legs[0].duration.value
+            : 0;
+          const totalTime = (time1 + time2 + time3) / 60;
+
+          // Add total fare to the existing route object
+          route.totalTime = totalTime;
+
+          const dist1 = route.originToWaterMetroLeg.legs[0].distance
+            ? route.originToWaterMetroLeg.legs[0].distance.value
+            : 0;
+          // const dist2 = route.metroLeg.duration ? route.metroLeg.duration.value : 0;
+          const dist3 = route.waterMetroToDestinationLeg.legs[0].distance
+            ? route.waterMetroToDestinationLeg.legs[0].distance.value
+            : 0;
+          const totalDistance = dist1 + dist3;
+
+          // Add total fare to the existing route object
+          route.totalDistance = totalDistance;
+
+          const finalPolylineCoords = [];
+          finalPolylineCoords.push(
+            route.originToWaterMetroLeg.overview_polyline.points
+          );
+          const waterMetroCoords = [
+            [
+              route.waterMetroLeg.startStation.latitude,
+              route.waterMetroLeg.startStation.longitude,
+            ],
+            [
+              route.waterMetroLeg.endStation.latitude,
+              route.waterMetroLeg.endStation.longitude,
+            ],
+          ];
+          const waterMetroEncodedCoords = polyline.encode(waterMetroCoords);
+          finalPolylineCoords.push(waterMetroEncodedCoords);
+          finalPolylineCoords.push(
+            route.waterMetroToDestinationLeg.overview_polyline.points
+          );
+          route.finalPolylineCoords = finalPolylineCoords;
+        });
+
+        return combinedWaterAndBusRoute;
+      }
+      const finalBusandWaterMetroRoute =
+        calculateTotalFareDistanceTimeandCoordinatesWaterMetro(
+          combinedWaterAndBusRoute
+        );
+      console.log(finalBusandWaterMetroRoute[0]);
 
       setRoutes({
         nearestMetroToOrigin,
