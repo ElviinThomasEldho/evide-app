@@ -1,192 +1,93 @@
-import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, Button } from "react-native";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
+import Button from "../components/UI/Button";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import polyline from "@mapbox/polyline";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import BottomModalContainer from "../components/BottomModalContainer";
-import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import * as Location from "expo-location";
-import axios from "axios";
+import SafeGooglePlacesAutocomplete from "../components/SafeGooglePlacesAutocomplete";
 import ProfileIcon from "../components/ProfileIcon";
-
 import RoutesModal from "../components/RoutesModal";
+
+// Import constants and utilities
+import { CONFIG } from "../constants/config";
+import { METRO_STATIONS } from "../constants/metroStations";
+import { findNearestStation } from "../utils/distanceCalculator";
+import { 
+  findRouteWithShortestTime, 
+  findRouteWithShortestDistance, 
+  findRouteWithLowestFare,
+  sortRoutes,
+  generateRandomShade
+} from "../utils/routeUtils";
+
+// Import services and hooks
+import { mapService, MapServiceError } from "../services/mapService";
+import { useLocation } from "../hooks/useLocation";
 
 const Home = ({ navigation }) => {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [routes, setRoutes] = useState();
-
   const [markers, setMarkers] = useState([]);
-
   const [shortestTimeBus, setShortestTimeBus] = useState();
   const [shortestDistanceBus, setShortestDistanceBus] = useState();
   const [lowestFareBus, setLowestFareBus] = useState();
-
   const [selectedSortCriteria, setSelectedSortCriteria] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // const API_KEY = process.env.API_KEY;
-  const API_KEY = "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384";
+  const API_KEY = CONFIG.GOOGLE_MAPS_API_KEY;
 
   const mapRef = useRef();
   const originRef = useRef();
   const destinationRef = useRef();
 
+  // Use custom location hook
+  const { currentLocation, isLoadingLocation } = useLocation(mapRef, originRef, setOrigin);
+
   useEffect(() => {
-    console.log("API_KEY : ", API_KEY);
-
-    const getPermissions = async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.log("Please grant location permissions");
-        return;
-      }
-
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      console.log("Location : ");
-      console.log(currentLocation);
-
-      mapRef.current?.animateToRegion({
-        latitude: currentLocation?.coords.latitude,
-        longitude: currentLocation?.coords.longitude,
-        latitudeDelta: 0.009,
-        longitudeDelta: 0.009,
-      });
-
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&key=${API_KEY}`
-      );
-      console.log(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLocation.coords.latitude},${currentLocation.coords.longitude}&key=${API_KEY}`
-      );
-      originRef.current.setAddressText(
-        response.data.results[0]?.formatted_address
-      );
+    if (currentLocation && destinationRef.current) {
       destinationRef.current.focus();
-      setOrigin(response.data.results[0]?.formatted_address);
-    };
-
-    getPermissions();
-  }, []);
+    }
+  }, [currentLocation]);
 
   // Function to find nearest metro station
   const findNearestMetroStation = (coordinates) => {
-    // Mock data for metro stations
-    const metroStations = [
-      { name: "Aluva", lat: 10.1099872, lng: 76.3495149 },
-      { name: "Pulinchodu", lat: 10.0951, lng: 76.3466 },
-      { name: "Companypady", lat: 10.0873, lng: 76.3428 },
-      { name: "Ambattukavu", lat: 10.0792806, lng: 76.3388894 },
-      { name: "Muttom", lat: 10.0727011, lng: 76.33375 },
-      { name: "Kalamassery", lat: 10.0630188, lng: 76.3279715 },
-      { name: "CUSAT", lat: 10.0468491, lng: 76.3182738 },
-      { name: "Pathadipalam", lat: 10.0361, lng: 76.3144 },
-      { name: "Edapally", lat: 10.025263, lng: 76.3083641 },
-      { name: "Changampuzha Park", lat: 10.0152041, lng: 76.3023872 },
-      { name: "Palarivattom", lat: 10.0063373, lng: 76.3048456 },
-      { name: "JLN Stadium", lat: 10.0003003, lng: 76.2991852 },
-      { name: "Kaloor", lat: 9.9943, lng: 76.2914 },
-      { name: "Town Hall", lat: 9.9914, lng: 76.2884 },
-      { name: "MG Road", lat: 9.983496, lng: 76.282263 },
-      { name: "Maharaja’s College", lat: 9.9732357, lng: 76.2850733 },
-      { name: "Ernakulam South", lat: 9.9685, lng: 76.2893 },
-      { name: "Kadavanthra", lat: 9.966593, lng: 76.298074 },
-      { name: "Elamkulam", lat: 9.9672125, lng: 76.3086071 },
-      { name: "Vyttila", lat: 9.9673739, lng: 76.3204215 },
-      { name: "Thaikoodam", lat: 9.960079, lng: 76.323483 },
-      { name: "Pettah", lat: 9.9525568, lng: 76.3300456 },
-      { name: "Vadakkekotta", lat: 9.952771, lng: 76.339277 },
-      { name: "SN Junction", lat: 9.954662, lng: 76.345919 },
-      { name: "Thrippunithura", lat: 9.9504507, lng: 76.3517069 },
-    ];
-
-    let minDistance = Number.MAX_VALUE;
-    let nearestStation = null;
-    for (const station of metroStations) {
-      const distance = calculateDistance(coordinates, station);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestStation = station;
-      }
-    }
-    return nearestStation;
-  };
-
-  // Function to calculate distance between two coordinates (in meters)
-  const calculateDistance = (coord1, coord2) => {
-    const R = 6371e3; // Earth radius in meters
-    const φ1 = (coord1.lat * Math.PI) / 180;
-    const φ2 = (coord2.lat * Math.PI) / 180;
-    const Δφ = ((coord2.lat - coord1.lat) * Math.PI) / 180;
-    const Δλ = ((coord2.lng - coord1.lng) * Math.PI) / 180;
-
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
+    return findNearestStation(coordinates, METRO_STATIONS);
   };
 
   const getroutes = async () => {
-    try {
-      const originResponse = await axios.get(
-        "https://maps.googleapis.com/maps/api/geocode/json",
-        {
-          params: {
-            address: origin,
-            key: API_KEY,
-          },
-        }
-      );
-      const originCoordinates =
-        originResponse.data.results[0]?.geometry.location;
+    // Reset error state
+    setError(null);
+    setIsLoading(true);
 
-      const destinationResponse = await axios.get(
-        "https://maps.googleapis.com/maps/api/geocode/json",
-        {
-          params: {
-            address: destination,
-            key: API_KEY,
-          },
-        }
-      );
-      const destinationCoordinates =
-        destinationResponse.data.results[0]?.geometry.location;
+    // Validate inputs
+    if (!origin.trim() || !destination.trim()) {
+      setError("Please enter both origin and destination");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Use the map service for cleaner API calls
+      const originCoordinates = await mapService.getCoordinatesFromAddress(origin);
+      const destinationCoordinates = await mapService.getCoordinatesFromAddress(destination);
 
       const nearestMetroToOrigin = findNearestMetroStation(originCoordinates);
       const nearestMetroToDestination = findNearestMetroStation(
         destinationCoordinates
       );
 
-      console.log(originCoordinates, destinationCoordinates);
+      // Get main route directions
+      const directionsData = await mapService.getDirections(origin, destination);
 
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
-      );
-      // setDirections(response.data);
-      console.log(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&mode=transit&key=${API_KEY}&alternatives=true`
-      );
-      console.log("Routes : ", response.data.routes);
-      // console.log(
-      //   "Polyline : ",
-      //   response.data.routes[0].overview_polyline.points
-      // );
-      const originToMetroResponse = await axios.get(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${nearestMetroToOrigin.lat},${nearestMetroToOrigin.lng}&key=${API_KEY}&mode=transit&alternatives=true`
-      );
-      const metroToDestinationResponse = await axios.get(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${nearestMetroToDestination.lat},${nearestMetroToDestination.lng}&destination=${destination}&key=${API_KEY}&mode=transit&alternatives=true`
-      );
+      // Get metro route directions
+      const originToMetroData = await mapService.getDirectionsToMetro(origin, nearestMetroToOrigin);
+      const metroToDestinationData = await mapService.getDirectionsFromMetro(nearestMetroToDestination, destination);
 
-      const routeDetails = response.data.routes;
-      const otmDetails = originToMetroResponse.data.routes;
-      console.log(
-        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOOOOOOOOOOOOOOOOOAAAAAAAAOOOOOOO"
-      );
-      console.log(originToMetroResponse.data.routes);
-      console.log(metroToDestinationResponse.data.routes[0]?.legs);
+      const routeDetails = directionsData.routes;
 
       const createCombinedRoutes = (
         originToMetroResponseData,
@@ -209,7 +110,6 @@ const Home = ({ navigation }) => {
                   text: "30 mins",
                   value: 1800,
                 },
-
                 summary: "Metro Transport",
                 warnings: ["Metro transport - Use caution"],
                 waypoint_order: [],
@@ -224,138 +124,64 @@ const Home = ({ navigation }) => {
         return combinedRoutes;
       };
 
-      const combinedRoutes = createCombinedRoutes(
-        originToMetroResponse.data.routes,
-        metroToDestinationResponse.data.routes
-      );
-      console.log(combinedRoutes);
-      console.log("1st part");
-      console.log(combinedRoutes[0].originToMetroLeg);
-      console.log("2nd part");
-      console.log(combinedRoutes[0].metroLeg);
-      console.log("3rd part");
-      console.log(combinedRoutes[0].metroToDestinationLeg);
-
       setRoutes({
         nearestMetroToOrigin,
         nearestMetroToDestination,
         routeDetails,
       });
 
-      setPolylineCoordinates(
-        polyline
-          .decode(response.data.routes[0].overview_polyline.points)
-          .map((coord) => {
-            return { latitude: coord[0], longitude: coord[1] };
-          })
-      );
-
-      setMarkers(() => [
-        {
-          latitude: response.data.routes[0]?.legs[0].start_location.lat,
-          longitude: response.data.routes[0]?.legs[0].start_location.lng,
-        },
-        {
-          latitude: response.data.routes[0]?.legs[0].end_location.lat,
-          longitude: response.data.routes[0]?.legs[0].end_location.lng,
-        },
-      ]);
+      // Handle polyline and markers
+      if (directionsData.routes[0]) {
+        setMarkers([
+          {
+            latitude: directionsData.routes[0].legs[0].start_location.lat,
+            longitude: directionsData.routes[0].legs[0].start_location.lng,
+          },
+          {
+            latitude: directionsData.routes[0].legs[0].end_location.lat,
+            longitude: directionsData.routes[0].legs[0].end_location.lng,
+          },
+        ]);
+      }
       mapRef.current?.fitToElements();
-      console.log("Markers : ", markers);
-
-      // shortestTimeBus = findBusWithShortestTime(routeDetails);
-      // shortestDistanceBus = findBusWithShortestDistance(routeDetails);
-      // lowestFareBus = findBusWithLowestFare(routeDetails);
 
       setShortestDistanceBus(() => findBusWithShortestDistance(routeDetails));
       setShortestTimeBus(() => findBusWithShortestTime(routeDetails));
       setLowestFareBus(() => findBusWithLowestFare(routeDetails));
-
-      console.log("Shortest Time Bus:", shortestTimeBus?.legs[0].duration.text);
-      console.log(
-        "Shortest Distance Bus:",
-        shortestDistanceBus?.legs[0].distance.text
-      );
-      console.log("Lowest Fare Bus:", lowestFareBus?.fare?.value);
     } catch (error) {
-      console.error("Error fetching coordinates: ", error);
+      // Handle MapServiceError with user-friendly messages
+      if (error instanceof MapServiceError) {
+        setError(error.message);
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+        console.error("Error fetching routes: ", error);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // These functions are now handled by imported utilities
   const findBusWithShortestTime = (routeDetails) => {
-    let shortestTime = Infinity;
-    let shortestTimeBus = null;
-
-    for (const route of routeDetails) {
-      const durationValue = route?.legs[0].duration?.value;
-      if (durationValue < shortestTime) {
-        shortestTime = durationValue;
-        shortestTimeBus = route;
-      }
-    }
-
-    return shortestTimeBus;
+    return findRouteWithShortestTime(routeDetails);
   };
 
   const findBusWithShortestDistance = (routeDetails) => {
-    let shortestDistance = Infinity;
-    let shortestDistanceBus = null;
-
-    for (const route of routeDetails) {
-      const distanceValue = route?.legs[0].distance?.value;
-      if (distanceValue < shortestDistance) {
-        shortestDistance = distanceValue;
-        shortestDistanceBus = route;
-      }
-    }
-
-    return shortestDistanceBus;
+    return findRouteWithShortestDistance(routeDetails);
   };
 
   const findBusWithLowestFare = (routeDetails) => {
-    let lowestFare = Infinity;
-    let lowestFareBus = null;
-
-    for (const route of routeDetails) {
-      const fareValue = route?.fare?.value;
-      if (fareValue < lowestFare) {
-        lowestFare = fareValue;
-        lowestFareBus = route;
-      }
-    }
-
-    return lowestFareBus;
+    return findRouteWithLowestFare(routeDetails);
   };
 
-  const sortRoutes = (criteria) => {
-    let sortedRoutes = [...routes.routeDetails];
-
-    switch (criteria) {
-      case "time":
-        sortedRoutes.sort((a, b) => {
-          return a?.legs[0].duration?.value - b?.legs[0].duration?.value;
-        });
-        break;
-      case "distance":
-        sortedRoutes.sort((a, b) => {
-          return a?.legs[0].distance?.value - b?.legs[0].distance?.value;
-        });
-        break;
-      case "fare":
-        sortedRoutes.sort((a, b) => {
-          return a?.fare?.value - b?.fare?.value;
-        });
-        break;
-      default:
-        return;
-    }
-
+  const handleSortRoutes = useCallback((criteria) => {
+    const sortedRoutes = sortRoutes(routes.routeDetails, criteria);
     setRoutes((prevState) => ({
       ...prevState,
       routeDetails: sortedRoutes,
     }));
     setSelectedSortCriteria(criteria);
-  };
+  }, [routes]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -369,38 +195,73 @@ const Home = ({ navigation }) => {
               onPress={() => navigation.toggleDrawer()} // Example onPress function
               imageSource={require("../assets/img/profile.png")} // Example image source
             />
-            <GooglePlacesAutocomplete
-              placeholder="Enter Origin"
-              ref={originRef}
-              styles={{
-                textInput: styles.locationInput,
-                listView: { position: "absolute", top: 50, zIndex: 2 },
-              }}
-              onPress={(data, details = null) => {
-                setOrigin(data.description);
-              }}
-              query={{
-                key: API_KEY,
-                language: "en",
-              }}
-              currentLocation
-            />
-            <GooglePlacesAutocomplete
-              ref={destinationRef}
-              styles={{
-                textInput: styles.locationInput,
-                listView: { position: "absolute", top: 50, zIndex: 2 },
-              }}
-              placeholder="Enter Destination"
-              onPress={(data, details = null) => {
-                console.log("Destination : ", data, details);
-                setDestination(data.description);
-              }}
-              query={{
-                key: API_KEY,
-                language: "en",
-              }}
-            />
+            {API_KEY && (
+              <SafeGooglePlacesAutocomplete
+                placeholder="Enter Origin"
+                ref={originRef}
+                styles={{
+                  textInput: styles.locationInput,
+                  listView: { position: "absolute", top: 50, zIndex: 2 },
+                }}
+                onPress={(data, details = null) => {
+                  setOrigin(data.description);
+                }}
+                query={{
+                  key: API_KEY,
+                  language: "en",
+                }}
+                enablePoweredByContainer={false}
+                debounce={400}
+                minLength={2}
+                fetchDetails={true}
+                listViewDisplayed="auto"
+                suppressDefaultStyles={false}
+                predefinedPlaces={[]}
+                predefinedPlacesAlwaysVisible={false}
+                textInputProps={{
+                  onChangeText: (text) => {
+                    setOrigin(text);
+                  },
+                }}
+                onFail={(error) => console.error('GooglePlacesAutocomplete Error:', error)}
+                onNotFound={() => console.log('No results found')}
+                keepResultsAfterBlur={true}
+              />
+            )}
+            {API_KEY && (
+              <SafeGooglePlacesAutocomplete
+                ref={destinationRef}
+                styles={{
+                  textInput: styles.locationInput,
+                  listView: { position: "absolute", top: 50, zIndex: 2 },
+                }}
+                placeholder="Enter Destination"
+                onPress={(data, details = null) => {
+                  console.log("Destination : ", data, details);
+                  setDestination(data.description);
+                }}
+                query={{
+                  key: API_KEY,
+                  language: "en",
+                }}
+                enablePoweredByContainer={false}
+                debounce={400}
+                minLength={2}
+                fetchDetails={true}
+                listViewDisplayed="auto"
+                suppressDefaultStyles={false}
+                predefinedPlaces={[]}
+                predefinedPlacesAlwaysVisible={false}
+                textInputProps={{
+                  onChangeText: (text) => {
+                    setDestination(text);
+                  },
+                }}
+                onFail={(error) => console.error('GooglePlacesAutocomplete Error:', error)}
+                onNotFound={() => console.log('No results found')}
+                keepResultsAfterBlur={true}
+              />
+            )}
           </View>
 
           <MapView
@@ -421,35 +282,9 @@ const Home = ({ navigation }) => {
                     return { latitude: coord[0], longitude: coord[1] };
                   });
 
-                function generateRandomShade(hexColor) {
-                  // Parse the hex color string into RGB components
-                  var red = parseInt(hexColor.substring(0, 2), 16);
-                  var green = parseInt(hexColor.substring(2, 4), 16);
-                  var blue = parseInt(hexColor.substring(4, 6), 16);
-
-                  // Generate random offsets for each RGB component
-                  var offsetRed = Math.floor(Math.random() * 51) - 25; // Random number between -25 and 25
-                  var offsetGreen = Math.floor(Math.random() * 51) - 25;
-                  var offsetBlue = Math.floor(Math.random() * 51) - 25;
-
-                  // Apply the offsets to the RGB components
-                  red = Math.min(255, Math.max(0, red + offsetRed));
-                  green = Math.min(255, Math.max(0, green + offsetGreen));
-                  blue = Math.min(255, Math.max(0, blue + offsetBlue));
-
-                  // Convert the RGB components back to hex
-                  var newHexColor =
-                    "#" +
-                    ((1 << 24) + (red << 16) + (green << 8) + blue)
-                      .toString(16)
-                      .slice(1);
-
-                  return newHexColor;
-                }
-
                 // Example usage:
-                var baseColor = "FFC75B";
-                var randomShade = generateRandomShade(baseColor);
+                const baseColor = "#FFC75B";
+                const randomShade = generateRandomShade(baseColor);
 
                 return (
                   <Polyline
@@ -461,11 +296,35 @@ const Home = ({ navigation }) => {
               })}
           </MapView>
           <BottomModalContainer buttonTitle="Find Routes">
-            {/* <ExploreModal navigation={navigation} /> */}
-            <Button title="Find Routes" onPress={getroutes} />
+            {/* Error Display */}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity onPress={() => setError(null)} style={styles.errorDismiss}>
+                  <Text style={styles.errorDismissText}>Dismiss</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Loading Indicator */}
+            {isLoading && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#FFC75B" />
+                <Text style={styles.loadingText}>Finding routes...</Text>
+              </View>
+            )}
+
+            {/* Find Routes Button */}
+            <Button 
+              title="Find Routes"
+              onPress={getroutes}
+              disabled={isLoading || !origin.trim() || !destination.trim()}
+              loading={isLoading}
+              variant="primary"
+            />
             <RoutesModal
               selectedSortCriteria={selectedSortCriteria}
-              sortRoutes={sortRoutes}
+              sortRoutes={handleSortRoutes}
               origin={origin}
               destination={destination}
               routes={routes}
@@ -488,7 +347,7 @@ const INPUT_WIDTH = 500;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100vw",
+    width: "100%",
     justifyContent: "space-between",
     alignItems: "center",
     padding: CONTAINER_PADDING,
@@ -504,8 +363,6 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
     ...StyleSheet.absoluteFillObject,
-    // width: "100%",
-    height: "100vh",
     marginBottom: 0,
     zIndex: -1,
   },
@@ -553,7 +410,7 @@ const styles = StyleSheet.create({
     marginTop: CONTAINER_PADDING,
   },
   menuButtonContainer: {
-    position: "fixed",
+    position: "absolute",
     top: 0,
     left: 0,
     padding: CONTAINER_PADDING,
@@ -569,5 +426,39 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#FFFFFF",
   },
+  errorContainer: {
+    backgroundColor: "#ffebee",
+    borderColor: "#d32f2f",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+  },
+  errorText: {
+    color: "#d32f2f",
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  errorDismiss: {
+    alignSelf: "flex-end",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  errorDismissText: {
+    color: "#d32f2f",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    padding: 20,
+    marginBottom: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: "#666",
+  },
 });
-export default Home;
+
+export default React.memo(Home);

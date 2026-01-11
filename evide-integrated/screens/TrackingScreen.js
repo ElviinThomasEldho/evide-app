@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Linking, TouchableOpacity } from "react-native"
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import SafeGooglePlacesAutocomplete from "../components/SafeGooglePlacesAutocomplete";
 import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import polyline from "@mapbox/polyline";
@@ -13,13 +13,14 @@ import BottomModalContainer from "../components/BottomModalContainer";
 import TrackingModal from "../components/TrackingModal";
 
 import { useRoute } from "@react-navigation/native";
+import { CONFIG } from "../constants/config";
 
 const TrackingScreen = ({ navigation }) => {
   const r = useRoute();
   const { routeValue } = r.params; 
  
-  // const API_KEY = process.env.API_KEY;
-  const API_KEY = "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384";
+  // Use centralized config for API key
+  const API_KEY = CONFIG.GOOGLE_MAPS_API_KEY;
 
   const [markers, setMarkers] = useState([]);
 
@@ -146,19 +147,30 @@ const TrackingScreen = ({ navigation }) => {
               onPress={() => navigation.toggleDrawer()} // Example onPress function
               imageSource={require("../assets/img/profile.png")} // Example image source
             />
-            <GooglePlacesAutocomplete
+            <SafeGooglePlacesAutocomplete
               placeholder="Enter Origin"
               ref={originRef}
-              styles={{ textInput: styles.locationInput }}
+              styles={{ 
+                textInput: styles.locationInput,
+                listView: { position: "absolute", top: 50, zIndex: 2 },
+              }}
               onPress={(data, details = null) => {
                 setOrigin(data.description);
               }}
               query={{
-                key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
+                key: API_KEY,
                 language: "en",
               }}
+              enablePoweredByContainer={false}
+              textInputProps={{
+                onChangeText: (text) => {
+                  setOrigin(text);
+                },
+              }}
+              onFail={(error) => console.error('GooglePlacesAutocomplete Error:', error)}
+              keepResultsAfterBlur={true}
             />
-            <GooglePlacesAutocomplete
+            <SafeGooglePlacesAutocomplete
               ref={destinationRef}
               styles={{
                 textInput: styles.locationInput,
@@ -170,9 +182,17 @@ const TrackingScreen = ({ navigation }) => {
                 setDestination(data.description);
               }}
               query={{
-                key: "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384",
+                key: API_KEY,
                 language: "en",
               }}
+              enablePoweredByContainer={false}
+              textInputProps={{
+                onChangeText: (text) => {
+                  setDestination(text);
+                },
+              }}
+              onFail={(error) => console.error('GooglePlacesAutocomplete Error:', error)}
+              keepResultsAfterBlur={true}
             />
           </View>
 
@@ -237,7 +257,7 @@ const INPUT_WIDTH = 500;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100vw",
+    width: "100%",
     justifyContent: "space-between",
     alignItems: "center",
     padding: CONTAINER_PADDING,
@@ -253,8 +273,6 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
     ...StyleSheet.absoluteFillObject,
-    // width: "100%",
-    height: "100vh",
     marginBottom: 0,
     zIndex: -1,
   },
@@ -302,7 +320,7 @@ const styles = StyleSheet.create({
     marginTop: CONTAINER_PADDING,
   },
   menuButtonContainer: {
-    position: "fixed",
+    position: "absolute",
     top: 0,
     left: 0,
     padding: CONTAINER_PADDING,
@@ -331,4 +349,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-export default TrackingScreen;
+
+export default React.memo(TrackingScreen);

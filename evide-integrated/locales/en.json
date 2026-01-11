@@ -1,16 +1,19 @@
 {
-    "start": "Start Location",
-    "where": "Where To?",
-    "greet": "Hi Gayathri",
-    "question": "Where would you like to go?",
-    "buttonClicked": "You clicked to button!",
-    "popular":"Popular",
-    "nearby":"Nearby",
-    "mostReccomended":"Most Recommended",
-    "someMall":"Some Mall",
-    "home":"Home",
-    "viewRoutes":"View Routes",
-    "recommendedRoute": "Recommended Route"
-  
-
-  }
+  "start": "Start Location",
+  "where": "Where To?",
+  "greet": "Hi Gayathri",
+  "question": "Where would you like to go?",
+  "buttonClicked": "You clicked to button!",
+  "popular": "Popular",
+  "nearby": "Nearby",
+  "mostReccomended": "Most Recommended",
+  "someMall": "Some Mall",
+  "home": "Home",
+  "viewRoutes": "View Routes",
+  "recommendedRoute": "Recommended Route",
+  "selectLanguage": "Select Language",
+  "currentLanguage": "Current Language",
+  "changeLanguage": "Change Language",
+  "tracking": "Tracking",
+  "routeDetails": "Route Details"
+}

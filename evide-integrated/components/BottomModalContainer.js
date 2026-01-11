@@ -3,29 +3,26 @@ import {
   View,
   Text,
   StyleSheet,
-  Button,
-  Dimensions,
-  Image,
-  TouchableOpacity,
+  Pressable,
 } from "react-native";
-import {
-  GestureHandlerRootView,
-  ScrollView,
-} from "react-native-gesture-handler";
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-} from "@gorhom/bottom-sheet";
+import { ScrollView } from "react-native-gesture-handler";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { CONFIG } from '../constants/config';
 
-const windowHeight = Dimensions.get("window").height;
-
-export default BottomModalContainer = ({ navigation, children, buttonTitle }) => {
+/**
+ * BottomModalContainer component - manages bottom sheet modal display
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Content to display in modal
+ * @param {string} props.buttonTitle - Title for the modal trigger button
+ */
+const BottomModalContainer = ({ children, buttonTitle }) => {
   const bottomSheetModalRef = useRef(null);
-  const snapPoints = useMemo(() => ["25%", "40%", "75%"], []);
+  const snapPoints = useMemo(() => CONFIG.MODAL_SNAP_POINTS, []);
 
   useEffect(() => {
+    // Present modal when component mounts
     bottomSheetModalRef.current?.present();
-  }, []); // Present modal when component mounts
+  }, []);
 
   const handlePresentModal = useCallback(() => {
     bottomSheetModalRef.current?.present();
@@ -33,7 +30,7 @@ export default BottomModalContainer = ({ navigation, children, buttonTitle }) =>
 
   const handleContentPanning = useCallback(
     (event, gestureState, fromIndex, toIndex) => {
-      // Prevent the modal from going below 25%
+      // Prevent the modal from going below first snap point
       if (toIndex < 0) {
         return false;
       }
@@ -44,32 +41,37 @@ export default BottomModalContainer = ({ navigation, children, buttonTitle }) =>
 
   return (
     <View style={styles.container}>
-      <View style={styles.BottomSheetContainer}>
+      <View style={styles.bottomSheetContainer}>
         <BottomSheetModal
           ref={bottomSheetModalRef}
           index={1}
           snapPoints={snapPoints}
-          enableContentPanning={handleContentPanning} // Apply the custom content panning handler
+          enableContentPanning={handleContentPanning}
+          enablePanDownToClose={false}
+          backgroundStyle={styles.modalBackground}
+          handleIndicatorStyle={styles.handleIndicator}
         >
-          <View
-            style={{ height: "100%", marginTop: "1%", position: "relative" }}
-          >
+          <View style={styles.modalContent}>
             <ScrollView
               showsVerticalScrollIndicator={false}
               scrollEventThrottle={16}
-              style={{}}
-              contentContainerStyle={{ justifyContent: "flex-start" }}
+              contentContainerStyle={styles.scrollContent}
             >
               {children}
             </ScrollView>
           </View>
         </BottomSheetModal>
-        <TouchableOpacity
-          style={styles.modalButton}
+        
+        <Pressable
+          style={({ pressed }) => [
+            styles.modalButton,
+            pressed && styles.modalButtonPressed
+          ]}
           onPress={handlePresentModal}
+          android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}
         >
-          <Text style={{ color: "white" }}>{buttonTitle}</Text>
-        </TouchableOpacity>
+          <Text style={styles.buttonText}>{buttonTitle}</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -80,17 +82,49 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  bottomSheetContainer: {
+    position: "relative",
+  },
+  modalBackground: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  handleIndicator: {
+    backgroundColor: "#CCCCCC",
+    width: 40,
+  },
+  modalContent: {
+    height: "100%",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  scrollContent: {
+    justifyContent: "flex-start",
+    paddingBottom: 20,
+  },
   modalButton: {
     borderRadius: 30,
-    // zIndex: 2,
     backgroundColor: "#2675EC",
-    height: 40,
+    height: 48,
     width: 250,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  BottomSheetContainer: {
+  modalButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
-//hi
+export default React.memo(BottomModalContainer);

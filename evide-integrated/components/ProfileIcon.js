@@ -1,11 +1,24 @@
 import React from 'react';
-import { TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { Pressable, Image, StyleSheet } from 'react-native';
 
+/**
+ * ProfileIcon component - displays a circular profile icon button
+ * @param {Object} props - Component props
+ * @param {Function} props.onPress - Callback function when icon is pressed
+ * @param {Object} props.imageSource - Image source for the profile icon
+ */
 const ProfileIcon = ({ onPress, imageSource }) => {
   return (
-    <TouchableOpacity onPress={onPress} style={styles.circularButton}>
+    <Pressable 
+      onPress={onPress} 
+      style={({ pressed }) => [
+        styles.circularButton,
+        pressed && styles.pressed
+      ]}
+      android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', borderless: true }}
+    >
       <Image source={imageSource} style={styles.image} />
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -17,6 +30,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#2675EC',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  pressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.95 }],
   },
   image: {
     width: 39,
@@ -25,4 +43,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileIcon;
+export default React.memo(ProfileIcon);

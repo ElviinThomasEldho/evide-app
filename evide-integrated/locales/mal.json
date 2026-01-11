@@ -1,14 +1,19 @@
 {
-    "start": "ലൊക്കേഷൻ ആരംഭിക്കുകത്",
-    "where": "എവിടേക്കാ?",
-    "greet": "ഹായ് ഗായത്രി",
-    "question": "നിനക്ക് എങ്ങോട്ട് പോകാനാണ് ഇഷ്ടം?",
-    "buttonClicked": "You clicked to button!",
-    "popular":"ജനത്പ്രിയമായത്",
-    "nearby":"അത്ടുത്ത്",
-    "mostReccomended":"മലയാത്ളം",
-    "someMall":"ത്മലയാളം",
-    "home":"മലത്യാളം",
-    "viewRoutes":"എത്വിടേക്ക",
-    "recommendedRoute": "എത്വിഎത്വി"
-  }
+  "start": "ലൊക്കേഷൻ ആരംഭിക്കുക",
+  "where": "എവിടേക്കാ?",
+  "greet": "ഹായ് ഗായത്രി",
+  "question": "നിങ്ങൾ എവിടെ പോകാൻ ആഗ്രഹിക്കുന്നു?",
+  "buttonClicked": "നിങ്ങൾ ബട്ടൺ ക്ലിക്ക് ചെയ്തു!",
+  "popular": "ജനപ്രിയമായത്",
+  "nearby": "അടുത്തുള്ളത്",
+  "mostReccomended": "ഏറ്റവും ശുപാർശചെയ്യുന്നത്",
+  "someMall": "ചില മാൾ",
+  "home": "ഹോം",
+  "viewRoutes": "റൂട്ടുകൾ കാണുക",
+  "recommendedRoute": "ശുപാർശചെയ്ത റൂട്ട്",
+  "selectLanguage": "ഭാഷ തിരഞ്ഞെടുക്കുക",
+  "currentLanguage": "നിലവിലെ ഭാഷ",
+  "changeLanguage": "ഭാഷ മാറ്റുക",
+  "tracking": "ട്രാക്കിംഗ്",
+  "routeDetails": "റൂട്ട് വിശദാംശങ്ങൾ"
+}

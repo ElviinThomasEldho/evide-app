@@ -7,7 +7,7 @@ import polyline from "@mapbox/polyline";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import BottomModalContainer from "../components/BottomModalContainer";
-import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import SafeGooglePlacesAutocomplete from "../components/SafeGooglePlacesAutocomplete";
 import * as Location from "expo-location";
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -16,13 +16,14 @@ import ProfileIcon from "../components/ProfileIcon";
 import RouteModal from "../components/RouteModal";
 
 import { useRoute } from "@react-navigation/native";
+import { CONFIG } from "../constants/config";
 
 const RouteDetailScreen = ({ navigation }) => {
   const r = useRoute();
   const { routeValue } = r.params;
   
-  // const API_KEY = process.env.API_KEY;
-  const API_KEY = "AIzaSyDxcgmpNTtROwth6FMxilVQCUZ-D8U8384";
+  // Use centralized config for API key
+  const API_KEY = CONFIG.GOOGLE_MAPS_API_KEY;
 
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -91,10 +92,13 @@ const RouteDetailScreen = ({ navigation }) => {
               onPress={() => navigation.toggleDrawer()} // Example onPress function
               imageSource={require("../assets/img/profile.png")} // Example image source
             />
-            <GooglePlacesAutocomplete
+            <SafeGooglePlacesAutocomplete
               placeholder="Enter Origin"
               ref={originRef}
-              styles={{ textInput: styles.locationInput }}
+              styles={{ 
+                textInput: styles.locationInput,
+                listView: { position: "absolute", top: 50, zIndex: 2 },
+              }}
               onPress={(data, details = null) => {
                 setOrigin(data.description);
               }}
@@ -102,8 +106,16 @@ const RouteDetailScreen = ({ navigation }) => {
                 key: API_KEY,
                 language: "en",
               }}
+              enablePoweredByContainer={false}
+              textInputProps={{
+                onChangeText: (text) => {
+                  setOrigin(text);
+                },
+              }}
+              onFail={(error) => console.error('GooglePlacesAutocomplete Error:', error)}
+              keepResultsAfterBlur={true}
             />
-            <GooglePlacesAutocomplete
+            <SafeGooglePlacesAutocomplete
               ref={destinationRef}
               styles={{
                 textInput: styles.locationInput,
@@ -118,6 +130,14 @@ const RouteDetailScreen = ({ navigation }) => {
                 key: API_KEY,
                 language: "en",
               }}
+              enablePoweredByContainer={false}
+              textInputProps={{
+                onChangeText: (text) => {
+                  setDestination(text);
+                },
+              }}
+              onFail={(error) => console.error('GooglePlacesAutocomplete Error:', error)}
+              keepResultsAfterBlur={true}
             />
             {/* <Button title="Start Journey" /> */}
           </View>
@@ -157,12 +177,10 @@ const CONTAINER_PADDING = 10;
 const BUTTON_WIDTH = "80%";
 const INPUT_WIDTH = 500;
 
-export default RouteDetailScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100vw",
+    width: "100%",
     justifyContent: "space-between",
     alignItems: "center",
     padding: CONTAINER_PADDING,
@@ -178,8 +196,6 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
     ...StyleSheet.absoluteFillObject,
-    // width: "100%",
-    height: "100vh",
     marginBottom: 0,
     zIndex: -1,
   },
@@ -227,7 +243,7 @@ const styles = StyleSheet.create({
     marginTop: CONTAINER_PADDING,
   },
   menuButtonContainer: {
-    position: "fixed",
+    position: "absolute",
     top: 0,
     left: 0,
     padding: CONTAINER_PADDING,
@@ -244,3 +260,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 });
+
+export default React.memo(RouteDetailScreen);
